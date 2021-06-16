@@ -1,0 +1,14 @@
+{
+  "parser": "@typescript-eslint/parser",
+  "extends": ["plugin:@typescript-eslint/recommended", "prettier"],
+  "plugins": ["@typescript-eslint", "prettier"],
+  "rules": {
+    "prettier/prettier": "error",
+    "arrow-body-style": "off",
+    "prefer-arrow-callback": "off",
+    "max-len": ["error", { "code": 80 }],
+    "semi": ["error", "never"],
+    "quotes": ["error", "single"],
+    "no-empty": ["warn", { "allowEmptyCatch": true }]
+  }
+}
