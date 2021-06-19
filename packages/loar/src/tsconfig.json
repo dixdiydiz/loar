@@ -1,0 +1,15 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "noImplicitAny": true,
+    "removeComments": true,
+    "preserveConstEnums": true,
+    "outDir": "../dist",
+    "rootDir": ".",
+    "incremental": true,
+    "declaration": true,
+  },
+  "references": [
+    { "path": "../" }
+  ],
+}

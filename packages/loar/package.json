@@ -7,11 +7,19 @@
     "loar": "./bin/loar.js"
   },
   "scripts": {
-    "start": "tsc -w",
+    "start": "tsc -w -p src",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "license": "MIT",
   "dependencies": {
-    "cac": "^6.7.3"
+    "cac": "^6.7.3",
+    "connect": "^3.7.0",
+    "esbuild": "^0.12.9",
+    "fs-require": "^1.0.0",
+    "memfs": "^3.2.2",
+    "webpack": "^5.39.1"
+  },
+  "devDependencies": {
+    "@types/webpack": "^5.28.0"
   }
 }

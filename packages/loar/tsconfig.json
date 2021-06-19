@@ -1,18 +1,14 @@
 {
-  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "noImplicitAny": true,
-    "removeComments": true,
-    "preserveConstEnums": true,
-    "outDir": "dist",
-    "declaration": true,
-    "declarationDir": "types"
+    "rootDir": ".",
+    "outDir": ".",
+    "resolveJsonModule": true,
+    "composite": true
   },
   "include": [
-    "src/**/*"
+    "**/*.config.js" // for *.config.js files
   ],
-  "exclude": [
-    "node_modules",
-    "**/*.spec.ts"
+  "files": [
+    "package.json"
   ]
 }
