@@ -23,6 +23,7 @@
     "@commitlint/config-conventional": "^12.1.4",
     "@tsconfig/node14": "^1.0.1",
     "@types/node": "^15.12.2",
+    "@types/range-parser": "^1.2.3",
     "@typescript-eslint/eslint-plugin": "^4.27.0",
     "@typescript-eslint/parser": "^4.27.0",
     "eslint": "7.28.0",

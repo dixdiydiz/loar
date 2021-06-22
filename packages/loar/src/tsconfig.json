@@ -8,6 +8,9 @@
     "rootDir": ".",
     "incremental": true,
     "declaration": true,
+    "lib": [
+      "dom"
+    ]
   },
   "references": [
     { "path": "../" }

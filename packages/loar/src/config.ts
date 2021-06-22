@@ -1,26 +1,47 @@
-import type { Configuration as webpackConfig } from 'webpack'
+import type { Configuration as WebpackConfig } from 'webpack'
 import { constants as fsConstants } from 'fs'
 import fsPromises from 'fs/promises'
 import path from 'path'
 import { build } from 'esbuild'
 import { vol } from 'memfs'
 import { createFsRequire } from 'fs-require'
-import { isString, isArray, isObject } from './utils'
-import type { ObjectWithAnyKey } from './global'
+import type { Options as ProxyOptions } from 'http-proxy-middleware'
+import { isString, isObject } from './utils'
+import type { ObjectWithAnyKey } from './types'
 
-interface UserConfig {
-  /**
-   * entry html file
-   */
-  entry: string | ObjectWithAnyKey
-  webpackConfig: webpackConfig
+export interface DevServer {
+  https?: boolean
+  host?: string
+  port?: number
+  proxy?: {
+    [index: string]: ProxyOptions
+  }
 }
+interface BaseConfig {
+  htmlEntry?: string | ObjectWithAnyKey
+  devServer?: DevServer
+}
+interface UserConfig extends WebpackConfig, BaseConfig {
+  /**
+   * never
+   */
+  default: never
+  /**
+   * will be overwritten
+   */
+  entry: never
+}
+interface Configuration {
+  config: UserConfig
+  webpack: WebpackConfig
+}
+type DefaultConfig = Pick<UserConfig, 'htmlEntry'>
 
 export async function initConfig(option: {
   configfile?: string
-}): Promise<UserConfig> {
-  const defaultConfig = {
-    entry: path.resolve(process.cwd(), 'index.html')
+}): Promise<Configuration> {
+  const defaultConfig: DefaultConfig = {
+    htmlEntry: path.resolve(process.cwd(), 'index.html')
   }
   let userConfig: UserConfig
   let { configfile = '' } = option
@@ -41,6 +62,7 @@ export async function initConfig(option: {
     }
   }
   const ext: SupportExt = path.parse(configfile).ext as SupportExt
+  const mode = process.env.MODE || 'production'
   switch (ext) {
     case '.json':
     case '.js':
@@ -52,11 +74,16 @@ export async function initConfig(option: {
         platform: 'node',
         format: 'cjs',
         target: ['node14'],
+        define: {
+          'import.meta.env.MODE': JSON.stringify(mode),
+          'process.env.MODE': JSON.stringify(mode)
+        },
         write: false,
         outdir: '__LOAR_OUTDIR'
       })
       vol.writeFileSync('/config.js', outputFiles[0].text)
-      userConfig = createFsRequire(vol)('/config')
+      const original = createFsRequire(vol)('/config')
+      userConfig = original.default || original
       break
     }
     default:
@@ -64,26 +91,44 @@ export async function initConfig(option: {
         'The configuration file used an unsupported file or path error'
       )
   }
+  userConfig = {
+    ...defaultConfig,
+    ...userConfig,
+    htmlEntry: normalizesHtmlEntry(
+      defaultConfig.htmlEntry,
+      userConfig.htmlEntry
+    )
+  }
   return {
-    entry: normalizesEntry(defaultConfig.entry, userConfig.entry),
-    webpackConfig: userConfig.webpackConfig
+    config: userConfig,
+    webpack: normalizesWebpackConfig(userConfig)
   }
 }
 
-function normalizesEntry(
-  configL: UserConfig['entry'],
-  configH: UserConfig['entry']
-): UserConfig['entry'] {
-  let entry = configL
+function normalizesWebpackConfig(userConfig: UserConfig): WebpackConfig {
+  const ignoreKeys: (keyof BaseConfig)[] = ['htmlEntry', 'devServer']
+  const config = {
+    ...userConfig,
+    entry: {}
+  }
+  ignoreKeys.forEach((key) => Reflect.deleteProperty(config, key))
+  return config
+}
+
+function normalizesHtmlEntry(
+  configL: UserConfig['htmlEntry'],
+  configH: UserConfig['htmlEntry']
+): UserConfig['htmlEntry'] {
+  let htmlEntry = configL
   if (configH) {
     if (isString(configH)) {
-      entry = path.isAbsolute(configH)
+      htmlEntry = path.isAbsolute(configH)
         ? configH
         : path.join(process.cwd(), configH)
     } else if (isObject(configH)) {
-      entry = {}
+      htmlEntry = {}
       Object.entries(configH).forEach(([key, val]) => {
-        ;(<ObjectWithAnyKey>entry)[key] = path.isAbsolute(val)
+        ;(<ObjectWithAnyKey>htmlEntry)[key] = path.isAbsolute(val)
           ? val
           : path.join(process.cwd(), val)
       })
@@ -91,5 +136,5 @@ function normalizesEntry(
       throw Error('wrong type of entry property')
     }
   }
-  return entry
+  return htmlEntry
 }

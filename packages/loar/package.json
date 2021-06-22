@@ -16,10 +16,15 @@
     "connect": "^3.7.0",
     "esbuild": "^0.12.9",
     "fs-require": "^1.0.0",
+    "http-proxy-middleware": "^2.0.0",
     "memfs": "^3.2.2",
+    "mime-types": "^2.1.31",
+    "range-parser": "^1.2.1",
     "webpack": "^5.39.1"
   },
   "devDependencies": {
+    "@types/connect": "^3.4.34",
+    "@types/mime-types": "^2.1.0",
     "@types/webpack": "^5.28.0"
   }
 }
