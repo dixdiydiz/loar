@@ -1,23 +1,17 @@
 import cac from 'cac'
 import { version } from '../package.json'
-import { initConfig } from './config'
-import { createServerContext } from './server/cli'
+import { serveCommand } from './server/cli'
 
 const cli = cac('loar')
 
 cli
-  .command('start', 'start a develop server')
+  .command('serve', 'start a develop server')
   .option('--config', ' specify the configuration file name')
-  .action(async (options) => {
+  .action((options) => {
     process.env.MODE = 'development'
-    const { config: specifiedFile } = options
-    const config = await initConfig({
-      configfile: specifiedFile
-    })
-    console.log(JSON.stringify(config))
-    createServerContext({
-      devConfig: config.config.devServer!,
-      webapckConfig: config.webpack
+    const { config } = options
+    serveCommand({
+      configfile: config
     })
   })
 

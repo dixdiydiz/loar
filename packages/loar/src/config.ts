@@ -19,7 +19,7 @@ export interface DevServer {
 }
 interface BaseConfig {
   htmlEntry?: string | ObjectWithAnyKey
-  devServer?: DevServer
+  devServer: DevServer
 }
 interface UserConfig extends WebpackConfig, BaseConfig {
   /**
@@ -35,13 +35,17 @@ interface Configuration {
   config: UserConfig
   webpack: WebpackConfig
 }
-type DefaultConfig = Pick<UserConfig, 'htmlEntry'>
+type DefaultConfig = Pick<UserConfig, 'htmlEntry' | 'devServer'>
 
 export async function initConfig(option: {
   configfile?: string
 }): Promise<Configuration> {
   const defaultConfig: DefaultConfig = {
-    htmlEntry: path.resolve(process.cwd(), 'index.html')
+    htmlEntry: path.resolve(process.cwd(), 'index.html'),
+    devServer: {
+      host: '0.0.0.0',
+      port: 8000
+    }
   }
   let userConfig: UserConfig
   let { configfile = '' } = option

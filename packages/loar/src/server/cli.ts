@@ -2,11 +2,26 @@ import connect from 'connect'
 import http from 'http'
 import type { Configuration, Watching, Compiler, Compilation } from 'webpack'
 import { createProxyMiddleware } from 'http-proxy-middleware'
-import mime from 'mime-types'
 import { createCompiler } from '../build/compiler'
 import watchingMiddleware from './middleware/watchingMiddleware'
 import type { DevServer } from '../config'
+import { initConfig } from '../config'
 
+interface Options {
+  configfile?: string
+}
+export async function serveCommand(options: Options): Promise<void> {
+  const config = await initConfig({
+    configfile: options.configfile
+  })
+  console.log(JSON.stringify(config))
+  const devServe = config.config.devServer
+  const { server, watching, logger } = createServerContext({
+    devConfig: devServe!,
+    webapckConfig: config.webpack
+  })
+  server.listen(devServe.port)
+}
 export function createServerContext({
   devConfig,
   webapckConfig
