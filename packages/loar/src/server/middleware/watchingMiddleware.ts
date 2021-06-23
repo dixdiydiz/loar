@@ -29,7 +29,7 @@ interface Context {
 export default function wrapper(
   compiler: Compiler,
   logger: ReturnType<Compilation['getLogger']>,
-  htmlname?: string
+  appHtml?: string
 ) {
   const context: Context = {
     compiler,
@@ -42,7 +42,7 @@ export default function wrapper(
   }
   setupHooks(context)
   if (!compiler.watching) {
-    compiler.watch(
+    compiler.watching = compiler.watch(
       {
         aggregateTimeout: 600,
         poll: true,
@@ -75,7 +75,7 @@ export default function wrapper(
       const filename = getFileFromUrl(
         { statsCompilation, fileSystem: context.fileSystem },
         new URL(req.url || '/', `http://${req.headers.host}`),
-        htmlname
+        appHtml
       )
       if (!filename) {
         return next()
@@ -135,7 +135,7 @@ function setupHooks(context: Context): void {
 function getFileFromUrl(
   context: Pick<Context, 'statsCompilation' | 'fileSystem'>,
   url: URL,
-  htmlname?: string
+  appHtml?: string
 ) {
   let foundFilename
   const { statsCompilation, fileSystem } = context
@@ -159,7 +159,7 @@ function getFileFromUrl(
     if (fsStats.isFile()) {
       foundFilename = filename
     } else if (fsStats.isDirectory()) {
-      filename = path.join(filename, htmlname || 'index.html')
+      filename = path.join(filename, appHtml || 'index.html')
       try {
         fsStats = context.fileSystem.statSync(filename)
       } catch (__ignoreError) {

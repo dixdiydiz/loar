@@ -11,17 +11,17 @@ import type { ObjectWithAnyKey } from './types'
 
 export interface DevServer {
   https?: boolean
-  host?: string
-  port?: number
+  host: string
+  port: number
   proxy?: {
     [index: string]: ProxyOptions
   }
 }
 interface BaseConfig {
   htmlEntry?: string | ObjectWithAnyKey
-  devServer: DevServer
+  devServer: Partial<DevServer>
 }
-interface UserConfig extends WebpackConfig, BaseConfig {
+export interface UserConfig extends WebpackConfig, BaseConfig {
   /**
    * never
    */
@@ -34,6 +34,7 @@ interface UserConfig extends WebpackConfig, BaseConfig {
 interface Configuration {
   config: UserConfig
   webpack: WebpackConfig
+  configfile: string
 }
 type DefaultConfig = Pick<UserConfig, 'htmlEntry' | 'devServer'>
 
@@ -43,8 +44,8 @@ export async function initConfig(option: {
   const defaultConfig: DefaultConfig = {
     htmlEntry: path.resolve(process.cwd(), 'index.html'),
     devServer: {
-      host: '0.0.0.0',
-      port: 8000
+      host: process.env.HOST || '0.0.0.0',
+      port: Number(process.env.PORT) || 8000
     }
   }
   let userConfig: UserConfig
@@ -105,7 +106,8 @@ export async function initConfig(option: {
   }
   return {
     config: userConfig,
-    webpack: normalizesWebpackConfig(userConfig)
+    webpack: normalizesWebpackConfig(userConfig),
+    configfile
   }
 }
 

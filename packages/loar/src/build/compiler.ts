@@ -6,10 +6,10 @@ export function createCompiler(config: webpack.Configuration): {
   logger: ReturnType<Compilation['getLogger']>
 } {
   const DEV = process.env.MODE === 'development'
-  let logName = '__LOAR_BUILD'
+  let logName = 'Build'
   const compiler = webpack(config)
   if (DEV) {
-    logName = '__LOAR_DEV'
+    logName = 'Server'
   }
   const logger = compiler.getInfrastructureLogger(logName)
   return {

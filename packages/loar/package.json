@@ -13,6 +13,8 @@
   "license": "MIT",
   "dependencies": {
     "cac": "^6.7.3",
+    "chalk": "^4.1.1",
+    "chokidar": "^3.5.2",
     "connect": "^3.7.0",
     "esbuild": "^0.12.9",
     "fs-require": "^1.0.0",
