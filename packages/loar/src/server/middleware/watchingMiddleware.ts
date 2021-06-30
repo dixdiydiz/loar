@@ -58,7 +58,7 @@ export default function wrapper(
   context.watching = compiler.watching
   const middleware: NextHandleFunction = (req, res, next) => {
     if (!req.method || ['GET', 'POST', 'HEAD'].includes(req.method)) {
-      return next
+      next()
     }
     if (context.state) {
       return processReq()
@@ -97,7 +97,6 @@ export default function wrapper(
       }
     }
   }
-  // middleware.watching = compiler.watching
   return middleware
 }
 
@@ -138,7 +137,7 @@ function getFileFromUrl(
   appHtml?: string
 ) {
   let foundFilename
-  const { statsCompilation, fileSystem } = context
+  const { statsCompilation } = context
   let { outputPath, publicPath = '/' } = statsCompilation!
   publicPath = publicPath === 'auto' ? '/' : publicPath
   outputPath = outputPath || '/'

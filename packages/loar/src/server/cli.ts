@@ -6,7 +6,7 @@ import { createProxyMiddleware } from 'http-proxy-middleware'
 import chalk from 'chalk'
 import { createCompiler } from '../build/compiler'
 import watchingMiddleware from './middleware/watchingMiddleware'
-import type { UserConfig } from '../config'
+import type { UserConfig } from '../config/configMerger'
 
 export async function serveCommand(
   config: UserConfig,

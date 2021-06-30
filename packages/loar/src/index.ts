@@ -3,7 +3,8 @@ import chalk from 'chalk'
 import chokidar from 'chokidar'
 import { version } from '../package.json'
 import { serveCommand } from './server/cli'
-import { initConfig } from './config'
+import ConfigMerger from './config/configMerger'
+import { initConfig } from './config/index'
 
 const cli = cac('loar')
 
@@ -12,14 +13,14 @@ cli
   .option('--config', ' specify the configuration file name')
   .action(async (options) => {
     process.env.MODE = 'development'
-    const {
-      config,
-      webpack: webpackConfig,
-      configfile
-    } = await initConfig({
+    const { merger, configfile } = await initConfig({
       configfile: options.config
     })
-    const { server, watching } = await serveCommand(config, webpackConfig)
+
+    const { server, watching } = await serveCommand(
+      merger.resolvedConfig,
+      merger.cleanWebpackConfig()
+    )
     chokidar.watch(configfile).on('change', () => {
       console.log(
         chalk.bgGreenBright(

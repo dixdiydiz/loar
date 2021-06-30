@@ -8,6 +8,7 @@ module.exports = {
     'max-len': ['error', { code: 80, ignoreUrls: true }],
     semi: ['error', 'never'],
     quotes: ['error', 'single'],
-    'no-empty': ['warn', { allowEmptyCatch: true }]
+    'no-empty': ['warn', { allowEmptyCatch: true }],
+    '@typescript-eslint/ban-ts-comment': 0
   }
 }
