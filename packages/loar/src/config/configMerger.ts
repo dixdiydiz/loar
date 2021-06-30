@@ -180,7 +180,7 @@ export class ConfigMerger {
   assignModule() {
     const defaultRules: RuleSetRule[] = [
       {
-        test: '.jsx?$',
+        test: /.jsx?$/,
         use: [
           {
             loader: 'esbuild-loader',
@@ -189,7 +189,7 @@ export class ConfigMerger {
         ]
       },
       {
-        test: '.tsx?$',
+        test: /.tsx?$/,
         use: [
           {
             loader: 'esbuild-loader',

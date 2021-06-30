@@ -3,8 +3,8 @@ import chalk from 'chalk'
 import chokidar from 'chokidar'
 import { version } from '../package.json'
 import { serveCommand } from './server/cli'
-import ConfigMerger from './config/configMerger'
 import { initConfig } from './config/index'
+import { buildCommand } from './build/compiler'
 
 const cli = cac('loar')
 
@@ -39,6 +39,17 @@ cli
         process.exit()
       })
     )
+  })
+cli
+  .command('build', 'build project form production')
+  .option('--config', ' specify the configuration file name')
+  .action(async (options) => {
+    process.env.MODE = 'production'
+    const { merger } = await initConfig({
+      configfile: options.config
+    })
+    const config = merger.cleanWebpackConfig()
+    buildCommand(config)
   })
 
 cli.on('command:*', () => {
