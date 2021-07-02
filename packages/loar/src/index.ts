@@ -43,11 +43,10 @@ cli
 cli
   .command('build', 'build project form production')
   .option('--config', ' specify the configuration file name')
+  .option('--progress', 'prints progress messages to stderr')
   .action(async (options) => {
     process.env.MODE = 'production'
-    const { merger } = await initConfig({
-      configfile: options.config
-    })
+    const { merger } = await initConfig(options)
     const config = merger.cleanWebpackConfig()
     buildCommand(config)
   })

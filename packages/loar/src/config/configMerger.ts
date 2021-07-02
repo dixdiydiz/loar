@@ -1,16 +1,21 @@
 import path from 'path'
 import fs from 'fs'
-import type { Configuration as WebpackConfig, RuleSetRule } from 'webpack'
+import webpack, { Configuration as WebpackConfig, RuleSetRule } from 'webpack'
 import CssMinimizerPlugin from 'css-minimizer-webpack-plugin'
 import { SyncWaterfallHook } from 'tapable'
 import type { Options as ProxyOptions } from 'http-proxy-middleware'
 import HtmlWebpackPlugin, {
   Options as HtmlWebpackPluginOptions
 } from 'html-webpack-plugin'
+import ModuleNotFoundErrorPlugin from '../build/plugins/ModuleNotFoundErrorPlugin'
 import { assignRules } from './webpackConfigHelper'
 import { isObject, isString } from '../utils'
 
 type FieldPlugin = { preApply: (arg: HooksContext) => void }
+
+interface cssOptions {
+  loaderOptions?: any
+}
 
 export interface DevServer {
   https?: boolean
@@ -30,6 +35,10 @@ export interface ExtendedConfig {
    */
   publicPath?: string
   /**
+   * progress
+   */
+  progress?: boolean
+  /**
    * force use sourcemap in development
    */
   sourceMapOnProduction?: boolean
@@ -41,6 +50,13 @@ export interface ExtendedConfig {
    * html-webpack-plugin options
    */
   htmlOptions?: HtmlWebpackPluginOptions
+  /**
+   *
+   */
+  css?: cssOptions
+  /**
+   * esbuild loader option
+   */
   esbuildLoaderOptions?: { [index: string]: any }
   /**
    * loar special plugins
@@ -205,6 +221,22 @@ export class ConfigMerger {
     return this
   }
   assignPlugins() {
+    const optionalPlugins = [
+      this.resolvedConfig.progress &&
+        new webpack.ProgressPlugin({
+          activeModules: false,
+          entries: true,
+          handler(percentage, message, ...args) {
+            console.info(percentage, message, ...args)
+          },
+          modules: true,
+          modulesCount: 5000,
+          profile: false,
+          dependencies: true,
+          dependenciesCount: 10000,
+          percentBy: null
+        })
+    ].filter(Boolean) as WebpackConfig['plugins']
     this.resolvedConfig.plugins = [
       new HtmlWebpackPlugin(
         Object.assign(
@@ -232,7 +264,9 @@ export class ConfigMerger {
           this.resolvedConfig.htmlOptions || undefined
         )
       ),
-      ...(this.resolvedConfig?.plugins || [])
+      new ModuleNotFoundErrorPlugin(this.rootpath),
+      ...optionalPlugins!,
+      ...(this.resolvedConfig.plugins || [])
     ]
     return this
   }
@@ -265,7 +299,8 @@ export class ConfigMerger {
       'htmlOptions',
       'esbuildLoaderOptions',
       'rootPath',
-      'publicPath'
+      'publicPath',
+      'progress'
     ]
     Object.entries(this.resolvedConfig).forEach(([key, val]) => {
       if (!ignoreKeys.includes(<IgnoreKeys>key)) {

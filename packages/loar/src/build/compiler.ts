@@ -24,10 +24,21 @@ export function createCompiler(config: webpack.Configuration): {
 export function buildCommand(config: webpack.Configuration) {
   const { compiler } = createCompiler(config)
   compiler.run((err, stats) => {
-    console.log(JSON.stringify(stats))
     if (err) {
-      console.error(chalk.red(err))
+      console.error(chalk.redBright(err.stack || err))
+      return
     }
-    compiler.close((closeErr) => console.error(chalk.red(closeErr)))
+    if (stats?.hasErrors()) {
+      console.error(
+        chalk.redBright(
+          stats.toString({
+            all: false,
+            errors: true,
+            colors: true
+          })
+        )
+      )
+    }
+    compiler.close((err) => err && console.error('closeErr', chalk.red(err)))
   })
 }

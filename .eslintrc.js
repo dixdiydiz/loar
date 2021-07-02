@@ -5,7 +5,18 @@ module.exports = {
     'plugin:prettier/recommended'
   ],
   rules: {
-    'max-len': ['error', { code: 80, ignoreUrls: true }],
+    'max-len': [
+      'error',
+      {
+        code: 80,
+        ignoreUrls: true,
+        ignoreComments: true,
+        ignoreTrailingComments: true,
+        ignoreTemplateLiterals: true,
+        ignoreStrings: true,
+        ignoreRegExpLiterals: true
+      }
+    ],
     semi: ['error', 'never'],
     quotes: ['error', 'single'],
     'no-empty': ['warn', { allowEmptyCatch: true }],

@@ -8,14 +8,14 @@ import { createFsRequire } from 'fs-require'
 import ConfigMerger from './configMerger'
 import type { UserConfig } from './configMerger'
 
-export async function initConfig(option: { configfile?: string }): Promise<{
+export async function initConfig(options: Record<string, any>): Promise<{
   merger: ConfigMerger
   configfile: string
 }> {
   const mode: WebpackConfig['mode'] = process.env.MODE as WebpackConfig['mode']
   let config: UserConfig
   const merger = new ConfigMerger(mode)
-  let { configfile = '' } = option
+  let { config: configfile = '' } = options
   const supportExt = ['.json', '.js', '.ts'] as const
 
   if (!configfile) {
@@ -59,6 +59,10 @@ export async function initConfig(option: { configfile?: string }): Promise<{
       throw Error(
         'The configuration file used an unsupported file or path error'
       )
+  }
+  config = {
+    ...config,
+    progress: options.progress
   }
   merger.setConfig(config, true).registerHooks()
   merger.resolveConfigHook()
