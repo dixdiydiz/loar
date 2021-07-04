@@ -1,7 +1,10 @@
 import type { RuleSetRule } from 'webpack'
-import { isArray, isFunction } from '../utils'
+import { isArray } from '../utils'
 
-export function assignRules(rules: RuleSetRule[], insertRules: unknown) {
+export function combineRules(
+  rules: RuleSetRule[],
+  insertRules: unknown
+): RuleSetRule[] {
   if (isArray(insertRules)) {
     for (const rule of insertRules) {
       const { use, test } = rule

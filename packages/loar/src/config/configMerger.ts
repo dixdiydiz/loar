@@ -1,20 +1,27 @@
 import path from 'path'
 import fs from 'fs'
 import webpack, { Configuration as WebpackConfig, RuleSetRule } from 'webpack'
-import CssMinimizerPlugin from 'css-minimizer-webpack-plugin'
 import { SyncWaterfallHook } from 'tapable'
 import type { Options as ProxyOptions } from 'http-proxy-middleware'
 import HtmlWebpackPlugin, {
   Options as HtmlWebpackPluginOptions
 } from 'html-webpack-plugin'
+import MiniCssExtractPlugin from 'mini-css-extract-plugin'
 import ModuleNotFoundErrorPlugin from '../build/plugins/ModuleNotFoundErrorPlugin'
-import { assignRules } from './webpackConfigHelper'
+import { combineRules } from './webpackConfigHelper'
 import { isObject, isString } from '../utils'
 
-type FieldPlugin = { preApply: (arg: HooksContext) => void }
-
-interface cssOptions {
-  loaderOptions?: any
+type LoaderOptions = Partial<
+  Record<
+    | `${'css' | 'sass' | 'less' | 'style' | 'stylus' | 'postcss'}-loader`
+    | 'css-extract',
+    any
+  >
+>
+interface CssOptions extends LoaderOptions {
+  extract?: boolean | Record<string, any>
+  sourceMap?: boolean
+  moduleExtension?: boolean | string
 }
 
 export interface DevServer {
@@ -25,6 +32,9 @@ export interface DevServer {
     [index: string]: ProxyOptions
   }
 }
+
+type FieldPlugin = { preApply: (arg: HooksContext) => void }
+
 export interface ExtendedConfig {
   /**
    * root path, default process.cwd()
@@ -53,7 +63,7 @@ export interface ExtendedConfig {
   /**
    *
    */
-  css?: cssOptions
+  css?: CssOptions
   /**
    * esbuild loader option
    */
@@ -113,7 +123,7 @@ export class ConfigMerger {
       }
     }
     if (autoAssign) {
-      this.runAssign()
+      this.hybrid()
     }
     return this
   }
@@ -158,9 +168,7 @@ export class ConfigMerger {
     return this
   }
   assignOptimization() {
-    const defaultMinimizer: any[] = this.isProductionMode
-      ? [new CssMinimizerPlugin()]
-      : []
+    const defaultMinimizer: any[] = []
     const defaultOption: { [key in keyof WebpackConfig['optimization']]: any } =
       {
         minimize: this.isProductionMode
@@ -194,7 +202,7 @@ export class ConfigMerger {
     return this
   }
   assignModule() {
-    const defaultRules: RuleSetRule[] = [
+    const jsRules: RuleSetRule[] = [
       {
         test: /.jsx?$/,
         use: [
@@ -214,13 +222,19 @@ export class ConfigMerger {
         ]
       }
     ]
+    const cssRules = this.produceCssLoader()
     this.resolvedConfig.module = {
-      rules: assignRules(defaultRules, this.resolvedConfig?.module?.rules),
-      ...this.resolvedConfig.module
+      ...this.resolvedConfig.module,
+      rules: [
+        ...combineRules(jsRules, this.resolvedConfig?.module?.rules),
+        ...combineRules(cssRules, this.resolvedConfig?.module?.rules)
+      ]
     }
     return this
   }
   assignPlugins() {
+    const { extract: useMiniCssExtractPlugin = this.isProductionMode } =
+      this.resolvedConfig?.css || {}
     const optionalPlugins = [
       this.resolvedConfig.progress &&
         new webpack.ProgressPlugin({
@@ -235,7 +249,10 @@ export class ConfigMerger {
           dependencies: true,
           dependenciesCount: 10000,
           percentBy: null
-        })
+        }),
+      this.isProductionMode &&
+        useMiniCssExtractPlugin &&
+        new MiniCssExtractPlugin()
     ].filter(Boolean) as WebpackConfig['plugins']
     this.resolvedConfig.plugins = [
       new HtmlWebpackPlugin(
@@ -281,7 +298,133 @@ export class ConfigMerger {
     Object.assign(this.resolvedConfig, defaultOption)
     return this
   }
-  runAssign() {
+  produceCssLoader(): RuleSetRule[] {
+    const { isProductionMode } = this
+    const {
+      extract = isProductionMode,
+      sourceMap = false,
+      moduleExtension = true,
+      ...loaderOptions
+    } = this.resolvedConfig?.css || {}
+    const moduleAutoReg =
+      moduleExtension === false
+        ? undefined
+        : moduleExtension === '*'
+        ? new RegExp('\\.\\w+$')
+        : isString(moduleExtension) && moduleExtension.length
+        ? new RegExp(`\\.${moduleExtension}\\.\\w+$`)
+        : new RegExp('\\.module\\.\\w+$')
+    const baseLoaderOptions: BaseCssLoaderOptions = [
+      'style-loader',
+      'css-loader',
+      'css-extract'
+    ].reduce((res, key) => {
+      res[key as keyof BaseCssLoaderOptions] = Object.assign(
+        {},
+        key !== 'css-extract' ? { sourceMap } : undefined,
+        loaderOptions[key as keyof BaseCssLoaderOptions],
+        key === 'css-loader' && moduleAutoReg
+          ? {
+              modules: {
+                auto: moduleAutoReg,
+                localIdentName: '[path][name]__[local]--[hash:base64:5]'
+              }
+            }
+          : undefined
+      )
+      return res as BaseCssLoaderOptions
+    }, {} as BaseCssLoaderOptions)
+
+    return [
+      {
+        test: /\.css$/i,
+        use: getBaseCssLoader(baseLoaderOptions)
+      },
+      {
+        test: /\.s[ca]ss$/i,
+        use: [
+          ...getBaseCssLoader(baseLoaderOptions),
+          {
+            loader: 'resolve-url-loader',
+            options: { sourceMap }
+          },
+          {
+            loader: 'sass-loader',
+            options: Object.assign(
+              {},
+              { sourceMap },
+              loaderOptions['sass-loader']
+            )
+          }
+        ]
+      },
+      {
+        test: /\.less$/i,
+        use: [
+          ...getBaseCssLoader(baseLoaderOptions),
+          {
+            loader: 'less-loader',
+            options: Object.assign(
+              {},
+              { sourceMap },
+              loaderOptions['less-loader']
+            )
+          }
+        ]
+      },
+      {
+        test: /\.styl$/i,
+        use: [
+          ...getBaseCssLoader(baseLoaderOptions),
+          {
+            loader: 'stylus-loader',
+            options: Object.assign(
+              {},
+              { sourceMap },
+              loaderOptions['less-loader']
+            )
+          }
+        ]
+      },
+      {
+        test: /\.sss$/i,
+        use: [
+          ...getBaseCssLoader(baseLoaderOptions),
+          {
+            loader: 'postcss-loader',
+            options: Object.assign(
+              {},
+              { sourceMap },
+              loaderOptions['postcss-loader']
+            )
+          }
+        ]
+      }
+    ]
+
+    type BaseCssLoaderOptions = Pick<
+      LoaderOptions,
+      'style-loader' | 'css-loader' | 'css-extract'
+    >
+    function getBaseCssLoader(options: BaseCssLoaderOptions): RuleSetRule[] {
+      return [
+        isProductionMode && extract
+          ? {
+              loader: MiniCssExtractPlugin.loader,
+              options: Object.assign({}, options['css-extract'])
+            }
+          : {
+              loader: 'style-loader',
+              options: Object.assign({}, options['style-loader'])
+            },
+        {
+          loader: 'css-loader',
+          options: Object.assign({}, options['css-loader'])
+        }
+      ]
+    }
+  }
+  hybrid() {
     this.assignOutpout()
       .assignResolve()
       .assignModule()
