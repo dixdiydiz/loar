@@ -227,14 +227,29 @@ export class ConfigMerger {
         test: /\.(png|jpg|gif)$/i,
         oneOf: [
           {
-            resourceQuery: /inline/, // foo.css?inline
-            use: 'url-loader'
+            resourceQuery: /inline/, // ?inline
+            type: 'asset/inline'
           },
           {
-            resourceQuery: /external/, // foo.css?external
-            type: 'asset/resource'
+            type: 'asset/resource' // default
           }
         ]
+      },
+      {
+        test: /\.svg$/i,
+        oneOf: [
+          {
+            resourceQuery: /inline/, // ?inline
+            type: 'asset/inline'
+          },
+          {
+            type: 'asset/resource' // default
+          }
+        ]
+      },
+      {
+        test: /\.txt/,
+        type: 'asset' // a file with size less than 8kb will be treated as a inline module type and resource module type otherwise.
       }
     ]
     const cssRules = this.produceCssLoader()
