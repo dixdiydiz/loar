@@ -222,11 +222,29 @@ export class ConfigMerger {
         ]
       }
     ]
+    const assetRules = [
+      {
+        test: /\.(png|jpg|gif)$/i,
+        oneOf: [
+          {
+            resourceQuery: /inline/, // foo.css?inline
+            use: 'url-loader'
+          },
+          {
+            resourceQuery: /external/, // foo.css?external
+            type: 'asset/resource'
+          }
+        ]
+      }
+    ]
     const cssRules = this.produceCssLoader()
     this.resolvedConfig.module = {
       ...this.resolvedConfig.module,
       rules: [
-        ...combineRules(jsRules, this.resolvedConfig?.module?.rules),
+        ...combineRules(
+          [...jsRules, ...assetRules],
+          this.resolvedConfig?.module?.rules
+        ),
         ...combineRules(cssRules, this.resolvedConfig?.module?.rules)
       ]
     }
