@@ -8,7 +8,13 @@ import { createFsRequire } from 'fs-require'
 import ConfigMerger from './configMerger'
 import type { UserConfig } from './configMerger'
 
-export async function initConfig(options: Record<string, any>): Promise<{
+export interface CommandOptions {
+  config?: string
+  stage?: string
+  progress?: boolean
+}
+
+export async function initConfig(options: CommandOptions): Promise<{
   merger: ConfigMerger
   configfile: string
 }> {
