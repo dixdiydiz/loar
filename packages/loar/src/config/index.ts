@@ -10,7 +10,7 @@ import type { UserConfig } from './configMerger'
 
 export interface CommandOptions {
   config?: string
-  stage?: string
+  staging?: string
   progress?: boolean
 }
 
@@ -19,6 +19,8 @@ export async function initConfig(options: CommandOptions): Promise<{
   configfile: string
 }> {
   const mode: WebpackConfig['mode'] = process.env.MODE as WebpackConfig['mode']
+  const { staging = mode } = options
+
   let config: UserConfig
   const merger = new ConfigMerger(mode)
   let { config: configfile = '' } = options

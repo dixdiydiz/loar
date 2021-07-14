@@ -21,6 +21,7 @@
     "chokidar": "^3.5.2",
     "connect": "^3.7.0",
     "css-loader": "^5.2.6",
+    "dotenv": "^10.0.0",
     "esbuild": "^0.12.14",
     "esbuild-loader": "^2.13.1",
     "fs-require": "^1.0.0",

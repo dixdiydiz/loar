@@ -11,14 +11,13 @@ const cli = cac('loar')
 cli
   .option('--config', ' specify the configuration file name')
   .option(
-    '--stage',
+    '--staging',
     'different release stages, like development, test, production and so on.'
   )
 
 cli
   .command('serve', 'start a develop server')
   .action(async (options: CommandOptions) => {
-    options.stage = options.stage ?? 'development'
     process.env.MODE = 'development'
     const { merger, configfile } = await initConfig(options)
 
@@ -49,7 +48,6 @@ cli
   .command('build', 'build project form production')
   .option('--progress', 'prints progress messages to stderr')
   .action(async (options: CommandOptions) => {
-    options.stage = options.stage ?? 'production'
     process.env.MODE = 'production'
     const { merger } = await initConfig(options)
     const config = merger.cleanWebpackConfig()
