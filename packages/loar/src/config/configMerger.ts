@@ -445,6 +445,7 @@ export class ConfigMerger {
       'publicPath',
       'progress'
     ]
+
     Object.entries(this.resolvedConfig).forEach(([key, val]) => {
       if (!ignoreKeys.includes(<IgnoreKeys>key)) {
         // @ts-ignore
