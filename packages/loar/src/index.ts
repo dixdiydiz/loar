@@ -3,19 +3,23 @@ import chalk from 'chalk'
 import chokidar from 'chokidar'
 import { version } from '../package.json'
 import { serveCommand } from './server/cli'
-import { initConfig } from './config/index'
+import { initConfig, CommandOptions } from './config/index'
 import { buildCommand } from './build/compiler'
 
 const cli = cac('loar')
 
 cli
-  .command('serve', 'start a develop server')
   .option('--config', ' specify the configuration file name')
-  .action(async (options) => {
+  .option(
+    '--staging',
+    'different release stages, like development, test, production and so on.'
+  )
+
+cli
+  .command('serve', 'start a develop server')
+  .action(async (options: CommandOptions) => {
     process.env.MODE = 'development'
-    const { merger, configfile } = await initConfig({
-      configfile: options.config
-    })
+    const { merger, configfile } = await initConfig(options)
 
     const { server, watching } = await serveCommand(
       merger.resolvedConfig,
@@ -42,9 +46,8 @@ cli
   })
 cli
   .command('build', 'build project form production')
-  .option('--config', ' specify the configuration file name')
   .option('--progress', 'prints progress messages to stderr')
-  .action(async (options) => {
+  .action(async (options: CommandOptions) => {
     process.env.MODE = 'production'
     const { merger } = await initConfig(options)
     const config = merger.cleanWebpackConfig()

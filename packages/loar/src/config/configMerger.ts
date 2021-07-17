@@ -222,11 +222,44 @@ export class ConfigMerger {
         ]
       }
     ]
+    const assetRules = [
+      {
+        test: /\.(png|jpg|gif)$/i,
+        oneOf: [
+          {
+            resourceQuery: /inline/, // ?inline
+            type: 'asset/inline'
+          },
+          {
+            type: 'asset/resource' // default
+          }
+        ]
+      },
+      {
+        test: /\.svg$/i,
+        oneOf: [
+          {
+            resourceQuery: /inline/, // ?inline
+            type: 'asset/inline'
+          },
+          {
+            type: 'asset/resource' // default
+          }
+        ]
+      },
+      {
+        test: /\.txt/,
+        type: 'asset' // a file with size less than 8kb will be treated as a inline module type and resource module type otherwise.
+      }
+    ]
     const cssRules = this.produceCssLoader()
     this.resolvedConfig.module = {
       ...this.resolvedConfig.module,
       rules: [
-        ...combineRules(jsRules, this.resolvedConfig?.module?.rules),
+        ...combineRules(
+          [...jsRules, ...assetRules],
+          this.resolvedConfig?.module?.rules
+        ),
         ...combineRules(cssRules, this.resolvedConfig?.module?.rules)
       ]
     }
