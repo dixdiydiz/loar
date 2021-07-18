@@ -8,7 +8,9 @@ import HtmlWebpackPlugin, {
 } from 'html-webpack-plugin'
 import MiniCssExtractPlugin from 'mini-css-extract-plugin'
 import ModuleNotFoundErrorPlugin from '../build/plugins/ModuleNotFoundErrorPlugin'
+import { setDotenv, EnvOptions, EnvPlugin } from '../build/plugins/EnvPlugin'
 import { combineRules } from './webpackConfigHelper'
+import { CommandOptions } from './index'
 import { isObject, isString } from '../utils'
 
 type LoaderOptions = Partial<
@@ -72,9 +74,14 @@ export interface ExtendedConfig {
    * loar special plugins
    */
   fieldPlugins?: FieldPlugin[]
+  /**
+   * dotenv config
+   */
+  envOptions?: EnvOptions
 }
 
 export type UserConfig = WebpackConfig & ExtendedConfig
+type OtherConfig = Pick<CommandOptions, 'staging'>
 
 interface HooksContext {
   hooks: {
@@ -88,6 +95,7 @@ export class ConfigMerger {
   private rootpath: string
   private publicPath: string
   resolvedConfig: UserConfig = {}
+  otherConfig: OtherConfig = {}
   webpackConfig: WebpackConfig = {}
   esbuildLoaderOptions = {}
 
@@ -102,11 +110,12 @@ export class ConfigMerger {
       hooks: this.constructHooks()
     }
   }
-  setConfig(config: UserConfig, autoAssign = false) {
+  setConfig(config: UserConfig, otherConfig: OtherConfig, autoAssign = false) {
     if (!isObject(config)) {
       throw Error('configuration format error')
     }
     this.resolvedConfig = config
+    this.otherConfig = otherConfig
     if (isString(config.rootPath)) {
       this.rootpath = fs.realpathSync(config.rootPath)
     }
@@ -122,6 +131,7 @@ export class ConfigMerger {
         ...config.esbuildLoaderOptions
       }
     }
+    this.handleEnvOptions()
     if (autoAssign) {
       this.hybrid()
     }
@@ -140,6 +150,37 @@ export class ConfigMerger {
   }
   resolveConfigHook() {
     this.hooksContext.hooks.resolveConfig.call(this.resolvedConfig)
+  }
+  handleEnvOptions() {
+    const { staging } = this.otherConfig
+    const { envOptions: userEnvOptions } = this.resolvedConfig
+    if (staging) {
+      const envOptions = Object.assign(
+        {},
+        {
+          ignoreProcessEnv: true,
+          override: true
+        },
+        userEnvOptions
+          ? {
+              ...userEnvOptions
+            }
+          : undefined,
+        userEnvOptions?.dir
+          ? {
+              dir: path.isAbsolute(userEnvOptions.dir)
+                ? userEnvOptions.dir
+                : path.resolve(this.rootpath, userEnvOptions.dir)
+            }
+          : {
+              dir: this.rootpath
+            }
+      )
+      setDotenv(staging, envOptions, {
+        PUBLIC_DIR: this.publicPath
+      })
+    }
+    return this
   }
   assignDevServer() {
     const defaultDevServer = {
@@ -315,6 +356,7 @@ export class ConfigMerger {
         )
       ),
       new ModuleNotFoundErrorPlugin(this.rootpath),
+      new EnvPlugin(),
       ...optionalPlugins!,
       ...(this.resolvedConfig.plugins || [])
     ]

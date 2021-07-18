@@ -72,7 +72,7 @@ export async function initConfig(options: CommandOptions): Promise<{
     ...config,
     progress: options.progress
   }
-  merger.setConfig(config, true).registerHooks()
+  merger.setConfig(config, { staging }, true).registerHooks()
   merger.resolveConfigHook()
   return {
     merger,
