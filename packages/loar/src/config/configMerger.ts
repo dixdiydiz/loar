@@ -3,9 +3,7 @@ import fs from 'fs'
 import webpack, { Configuration as WebpackConfig, RuleSetRule } from 'webpack'
 import { SyncWaterfallHook } from 'tapable'
 import type { Options as ProxyOptions } from 'http-proxy-middleware'
-import HtmlWebpackPlugin, {
-  Options as HtmlWebpackPluginOptions
-} from 'html-webpack-plugin'
+import type { Options as HtmlWebpackPluginOptions } from 'html-webpack-plugin'
 import MiniCssExtractPlugin from 'mini-css-extract-plugin'
 import ModuleNotFoundErrorPlugin from '../build/plugins/ModuleNotFoundErrorPlugin'
 import { setDotenv, EnvOptions, EnvPlugin } from '../build/plugins/EnvPlugin'
@@ -329,32 +327,6 @@ export class ConfigMerger {
         new MiniCssExtractPlugin()
     ].filter(Boolean) as WebpackConfig['plugins']
     this.resolvedConfig.plugins = [
-      new HtmlWebpackPlugin(
-        Object.assign(
-          {},
-          {
-            inject: true,
-            template: path.join(this.publicPath, './index.html')
-          },
-          this.isProductionMode
-            ? {
-                minify: {
-                  removeComments: true,
-                  collapseWhitespace: true,
-                  removeRedundantAttributes: true,
-                  useShortDoctype: true,
-                  removeEmptyAttributes: true,
-                  removeStyleLinkTypeAttributes: true,
-                  keepClosingSlash: true,
-                  minifyJS: true,
-                  minifyCSS: true,
-                  minifyURLs: true
-                }
-              }
-            : undefined,
-          this.resolvedConfig.htmlOptions || undefined
-        )
-      ),
       new ModuleNotFoundErrorPlugin(this.rootpath),
       new EnvPlugin(),
       ...optionalPlugins!,
