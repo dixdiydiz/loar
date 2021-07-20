@@ -56,5 +56,5 @@
 //   }
 // }
 //
-// module.exports = MyPlugin
+module.exports = MyPlugin
 // export default htmlWebpackPluginWrap
