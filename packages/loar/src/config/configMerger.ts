@@ -6,8 +6,13 @@ import type { Options as ProxyOptions } from 'http-proxy-middleware'
 import type { Options as HtmlWebpackPluginOptions } from 'html-webpack-plugin'
 import MiniCssExtractPlugin from 'mini-css-extract-plugin'
 import ModuleNotFoundErrorPlugin from '../build/plugins/ModuleNotFoundErrorPlugin'
-import { setDotenv, EnvOptions, EnvPlugin } from '../build/plugins/EnvPlugin'
-import { combineRules } from './webpackConfigHelper'
+import {
+  setDotenv,
+  EnvOptions,
+  EnvPlugin,
+  parsedEnv
+} from '../build/plugins/EnvPlugin'
+import { combineRules, htmlWebpackPluginOptions } from './webpackConfigHelper'
 import { CommandOptions } from './index'
 import { isObject, isString } from '../utils'
 
@@ -91,11 +96,12 @@ export class ConfigMerger {
   readonly isProductionMode: boolean
   readonly hooksContext: HooksContext
   private rootpath: string
-  private publicPath: string
+  publicPath: string
   resolvedConfig: UserConfig = {}
   otherConfig: OtherConfig = {}
   webpackConfig: WebpackConfig = {}
   esbuildLoaderOptions = {}
+  parsedEnv: Record<string, any>
 
   constructor(readonly mode: WebpackConfig['mode']) {
     this.mode = ['development', 'production'].includes(mode as string)
@@ -107,6 +113,7 @@ export class ConfigMerger {
     this.hooksContext = {
       hooks: this.constructHooks()
     }
+    this.parsedEnv = {}
   }
   setConfig(config: UserConfig, otherConfig: OtherConfig, autoAssign = false) {
     if (!isObject(config)) {
@@ -174,7 +181,7 @@ export class ConfigMerger {
               dir: this.rootpath
             }
       )
-      setDotenv(staging, envOptions, {
+      this.parsedEnv = setDotenv(staging, envOptions, {
         PUBLIC_DIR: this.publicPath
       })
     }
@@ -327,6 +334,7 @@ export class ConfigMerger {
         new MiniCssExtractPlugin()
     ].filter(Boolean) as WebpackConfig['plugins']
     this.resolvedConfig.plugins = [
+      htmlWebpackPluginOptions(this),
       new ModuleNotFoundErrorPlugin(this.rootpath),
       new EnvPlugin(),
       ...optionalPlugins!,
