@@ -18,7 +18,7 @@ export function setDotenv(
   staging: string,
   option: Required<EnvOptions>,
   extra?: Record<string, any>
-) {
+): typeof parsedEnv {
   const startFlag = 'APP_'
   const files = [
     '.env',
@@ -43,11 +43,10 @@ export function setDotenv(
   }
   if (isObject(extra)) {
     for (const [key, val] of Object.entries(extra!)) {
-      if (key.startsWith(startFlag)) {
-        parsedEnv[key] = val
-      }
+      parsedEnv[key] = val
     }
   }
+  return parsedEnv
 }
 
 // Mostly taken from here: https://github.com/motdotla/dotenv-expand/blob/master/lib/main.js#L7

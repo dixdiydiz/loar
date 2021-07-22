@@ -7,7 +7,7 @@ import type { Options as HtmlWebpackPluginOptions } from 'html-webpack-plugin'
 import MiniCssExtractPlugin from 'mini-css-extract-plugin'
 import ModuleNotFoundErrorPlugin from '../build/plugins/ModuleNotFoundErrorPlugin'
 import { setDotenv, EnvOptions, EnvPlugin } from '../build/plugins/EnvPlugin'
-import { combineRules } from './webpackConfigHelper'
+import { combineRules, htmlWebpackPluginOptions } from './webpackConfigHelper'
 import { CommandOptions } from './index'
 import { isObject, isString } from '../utils'
 
@@ -91,11 +91,12 @@ export class ConfigMerger {
   readonly isProductionMode: boolean
   readonly hooksContext: HooksContext
   private rootpath: string
-  private publicPath: string
+  publicPath: string
   resolvedConfig: UserConfig = {}
   otherConfig: OtherConfig = {}
   webpackConfig: WebpackConfig = {}
   esbuildLoaderOptions = {}
+  parsedEnv: Record<string, any>
 
   constructor(readonly mode: WebpackConfig['mode']) {
     this.mode = ['development', 'production'].includes(mode as string)
@@ -107,6 +108,7 @@ export class ConfigMerger {
     this.hooksContext = {
       hooks: this.constructHooks()
     }
+    this.parsedEnv = {}
   }
   setConfig(config: UserConfig, otherConfig: OtherConfig, autoAssign = false) {
     if (!isObject(config)) {
@@ -174,7 +176,7 @@ export class ConfigMerger {
               dir: this.rootpath
             }
       )
-      setDotenv(staging, envOptions, {
+      this.parsedEnv = setDotenv(staging, envOptions, {
         PUBLIC_DIR: this.publicPath
       })
     }
@@ -327,6 +329,7 @@ export class ConfigMerger {
         new MiniCssExtractPlugin()
     ].filter(Boolean) as WebpackConfig['plugins']
     this.resolvedConfig.plugins = [
+      htmlWebpackPluginOptions(this),
       new ModuleNotFoundErrorPlugin(this.rootpath),
       new EnvPlugin(),
       ...optionalPlugins!,
@@ -482,23 +485,31 @@ export class ConfigMerger {
     return this
   }
   cleanWebpackConfig() {
-    type IgnoreKeys = keyof Required<ExtendedConfig>
-    const ignoreKeys: IgnoreKeys[] = [
-      'devServer',
-      'sourceMapOnProduction',
-      'htmlOptions',
-      'esbuildLoaderOptions',
-      'rootPath',
-      'publicPath',
-      'progress'
-    ]
-
-    Object.entries(this.resolvedConfig).forEach(([key, val]) => {
-      if (!ignoreKeys.includes(<IgnoreKeys>key)) {
-        // @ts-ignore
-        this.webpackConfig[key] = val
-      }
-    })
+    type IgnoreKeys = {
+      [k in keyof Required<ExtendedConfig>]: unknown
+    }
+    const ignoreKeys: IgnoreKeys = {
+      rootPath: true,
+      publicPath: true,
+      progress: true,
+      sourceMapOnProduction: true,
+      devServer: true,
+      htmlOptions: true,
+      css: true,
+      esbuildLoaderOptions: true,
+      fieldPlugins: true,
+      envOptions: true
+    }
+    this.webpackConfig = Object.keys(this.resolvedConfig).reduce<WebpackConfig>(
+      (prev, curr) => {
+        if (!ignoreKeys[curr as keyof IgnoreKeys]) {
+          // @ts-ignore
+          prev[curr] = this.resolvedConfig[curr]
+        }
+        return prev
+      },
+      {}
+    )
     return this.webpackConfig
   }
 }
