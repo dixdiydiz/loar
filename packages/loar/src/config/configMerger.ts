@@ -6,12 +6,7 @@ import type { Options as ProxyOptions } from 'http-proxy-middleware'
 import type { Options as HtmlWebpackPluginOptions } from 'html-webpack-plugin'
 import MiniCssExtractPlugin from 'mini-css-extract-plugin'
 import ModuleNotFoundErrorPlugin from '../build/plugins/ModuleNotFoundErrorPlugin'
-import {
-  setDotenv,
-  EnvOptions,
-  EnvPlugin,
-  parsedEnv
-} from '../build/plugins/EnvPlugin'
+import { setDotenv, EnvOptions, EnvPlugin } from '../build/plugins/EnvPlugin'
 import { combineRules, htmlWebpackPluginOptions } from './webpackConfigHelper'
 import { CommandOptions } from './index'
 import { isObject, isString } from '../utils'
@@ -490,23 +485,31 @@ export class ConfigMerger {
     return this
   }
   cleanWebpackConfig() {
-    type IgnoreKeys = keyof Required<ExtendedConfig>
-    const ignoreKeys: IgnoreKeys[] = [
-      'devServer',
-      'sourceMapOnProduction',
-      'htmlOptions',
-      'esbuildLoaderOptions',
-      'rootPath',
-      'publicPath',
-      'progress'
-    ]
-
-    Object.entries(this.resolvedConfig).forEach(([key, val]) => {
-      if (!ignoreKeys.includes(<IgnoreKeys>key)) {
-        // @ts-ignore
-        this.webpackConfig[key] = val
-      }
-    })
+    type IgnoreKeys = {
+      [k in keyof Required<ExtendedConfig>]: unknown
+    }
+    const ignoreKeys: IgnoreKeys = {
+      rootPath: true,
+      publicPath: true,
+      progress: true,
+      sourceMapOnProduction: true,
+      devServer: true,
+      htmlOptions: true,
+      css: true,
+      esbuildLoaderOptions: true,
+      fieldPlugins: true,
+      envOptions: true
+    }
+    this.webpackConfig = Object.keys(this.resolvedConfig).reduce<WebpackConfig>(
+      (prev, curr) => {
+        if (!ignoreKeys[curr as keyof IgnoreKeys]) {
+          // @ts-ignore
+          prev[curr] = this.resolvedConfig[curr]
+        }
+        return prev
+      },
+      {}
+    )
     return this.webpackConfig
   }
 }
