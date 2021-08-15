@@ -2,12 +2,15 @@ import HtmlWebpackPlugin from 'html-webpack-plugin'
 import type { Compiler, Compilation } from 'webpack'
 import { isFunction, isObject } from '../../utils'
 
-// TODO: unused plugin
 export class InterpolateHtmlEnvPlugin {
   private HtmlWebpackPlugin: typeof HtmlWebpackPlugin
   private parsedEnv: Record<string, string>
-  constructor(htmlWebpackPlugin: typeof HtmlWebpackPlugin) {
-    this.HtmlWebpackPlugin = htmlWebpackPlugin
+  constructor(htmlWebpackPlugin?: typeof HtmlWebpackPlugin) {
+    if (htmlWebpackPlugin) {
+      this.HtmlWebpackPlugin = htmlWebpackPlugin
+    } else {
+      this.HtmlWebpackPlugin = HtmlWebpackPlugin
+    }
     this.parsedEnv = {}
   }
 
@@ -63,12 +66,12 @@ export class InterpolateHtmlEnvPlugin {
             })
           }
         )
-        this.HtmlWebpackPlugin.getHooks(
-          compilation
-        ).afterTemplateExecution.tapPromise('aa', async (data) => {
-          console.log(data)
-          return data
-        })
+        // this.HtmlWebpackPlugin.getHooks(
+        //   compilation
+        // ).afterTemplateExecution.tapPromise('aa', async (data) => {
+        //   console.log(data)
+        //   return data
+        // })
       }
     )
   }

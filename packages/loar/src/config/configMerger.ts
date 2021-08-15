@@ -7,9 +7,14 @@ import type { Options as HtmlWebpackPluginOptions } from 'html-webpack-plugin'
 import MiniCssExtractPlugin from 'mini-css-extract-plugin'
 import ModuleNotFoundErrorPlugin from '../build/plugins/ModuleNotFoundErrorPlugin'
 import { setDotenv, EnvOptions, EnvPlugin } from '../build/plugins/EnvPlugin'
-import { combineRules, htmlWebpackPluginOptions } from './webpackConfigHelper'
+import {
+  combineRules,
+  combineSwcLoaderOptions,
+  htmlWebpackPluginWrapper
+} from './webpackConfigHelper'
 import { CommandOptions } from './index'
 import { isObject, isString } from '../utils'
+import { InterpolateHtmlEnvPlugin } from '../build/plugins/InterpolateHtmlEnvPlugin'
 
 type LoaderOptions = Partial<
   Record<
@@ -65,9 +70,9 @@ export interface ExtendedConfig {
    */
   css?: CssOptions
   /**
-   * esbuild loader option
+   * swc loader options
    */
-  esbuildLoaderOptions?: { [index: string]: any }
+  swcLoaderOptions?: { [index: string]: any }
   /**
    * loar special plugins
    */
@@ -95,7 +100,7 @@ export class ConfigMerger {
   resolvedConfig: UserConfig = {}
   otherConfig: OtherConfig = {}
   webpackConfig: WebpackConfig = {}
-  esbuildLoaderOptions = {}
+  swcLoaderOptions = {}
   parsedEnv: Record<string, any>
 
   constructor(readonly mode: WebpackConfig['mode']) {
@@ -125,11 +130,8 @@ export class ConfigMerger {
         ? publicpath
         : path.resolve(this.rootpath, publicpath)
     }
-    if (config.esbuildLoaderOptions) {
-      this.esbuildLoaderOptions = {
-        target: 'es2015',
-        ...config.esbuildLoaderOptions
-      }
+    if (config.swcLoaderOptions) {
+      this.swcLoaderOptions = config.swcLoaderOptions
     }
     this.handleEnvOptions()
     if (autoAssign) {
@@ -245,22 +247,24 @@ export class ConfigMerger {
   assignModule() {
     const jsRules: RuleSetRule[] = [
       {
-        test: /.jsx?$/,
-        use: [
-          {
-            loader: 'esbuild-loader',
-            options: { loader: 'jsx', ...this.esbuildLoaderOptions }
-          }
-        ]
+        test: /\.m?jsx?$/,
+        exclude: /(node_modules)/,
+        use: {
+          loader: 'swc-loader',
+          options: combineSwcLoaderOptions(this.swcLoaderOptions, {
+            syntax: 'ecmascript'
+          })
+        }
       },
       {
-        test: /.tsx?$/,
-        use: [
-          {
-            loader: 'esbuild-loader',
-            options: { loader: 'tsx', ...this.esbuildLoaderOptions }
-          }
-        ]
+        test: /\.tsx?$/,
+        exclude: /(node_modules)/,
+        use: {
+          loader: 'swc-loader',
+          options: combineSwcLoaderOptions(this.swcLoaderOptions, {
+            syntax: 'typescript'
+          })
+        }
       }
     ]
     const assetRules = [
@@ -329,9 +333,10 @@ export class ConfigMerger {
         new MiniCssExtractPlugin()
     ].filter(Boolean) as WebpackConfig['plugins']
     this.resolvedConfig.plugins = [
-      htmlWebpackPluginOptions(this),
+      htmlWebpackPluginWrapper(this),
       new ModuleNotFoundErrorPlugin(this.rootpath),
       new EnvPlugin(),
+      new InterpolateHtmlEnvPlugin(),
       ...optionalPlugins!,
       ...(this.resolvedConfig.plugins || [])
     ]
@@ -496,7 +501,7 @@ export class ConfigMerger {
       devServer: true,
       htmlOptions: true,
       css: true,
-      esbuildLoaderOptions: true,
+      swcLoaderOptions: true,
       fieldPlugins: true,
       envOptions: true
     }

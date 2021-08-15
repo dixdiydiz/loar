@@ -1,7 +1,7 @@
 import type { RuleSetRule } from 'webpack'
-import HtmlWebpackPlugin, {
-  Options as HtmlWebpackPluginOptions
-} from 'html-webpack-plugin'
+import HtmlWebpackPlugin from 'html-webpack-plugin'
+// https://github.com/swc-project/swc/blob/master/node-swc/src/types.ts
+import { Config as swcConfig } from '@swc/core'
 import { isArray, isFunction, isObject } from '../utils'
 import path from 'path'
 import ConfigMerger from './configMerger'
@@ -33,7 +33,7 @@ export function combineRules(
   return rules
 }
 
-export function htmlWebpackPluginOptions(
+export function htmlWebpackPluginWrapper(
   configMerger: ConfigMerger
 ): HtmlWebpackPlugin {
   const templateParameters = handleTemplateParameters(
@@ -95,4 +95,44 @@ export function htmlWebpackPluginOptions(
     }
     return params
   }
+}
+
+export function combineSwcLoaderOptions(
+  config: swcConfig,
+  otherInfo: {
+    syntax: string
+  }
+): swcConfig {
+  const { syntax } = otherInfo
+  const { jsc = {} } = config
+  let { parser = {}, transform = {} } = jsc
+
+  parser = Object.assign(
+    {},
+    syntax === 'typescript'
+      ? {
+          syntax: 'typescript',
+          tsx: true
+        }
+      : syntax === 'ecmascript'
+      ? {
+          syntax: 'ecmascript',
+          jsx: true
+        }
+      : undefined,
+    parser
+  )
+
+  transform = Object.assign({}, transform, {
+    react: Object.assign({}, { refresh: true }, transform.react)
+  })
+
+  return Object.assign(
+    {},
+    config,
+    {
+      jsc: Object.assign({}, jsc, { parser }, { transform })
+    },
+    { sourceMaps: true }
+  )
 }
