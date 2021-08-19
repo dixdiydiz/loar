@@ -211,19 +211,21 @@ export class ConfigMerger {
     return this
   }
   assignOptimization() {
-    const defaultMinimizer: any[] = []
-    const defaultOption: { [key in keyof WebpackConfig['optimization']]: any } =
-      {
-        minimize: this.isProductionMode
-      }
     this.resolvedConfig.optimization = {
-      ...defaultOption,
+      minimize: this.isProductionMode,
       ...this.resolvedConfig.optimization,
       minimizer: [
         '...',
-        ...defaultMinimizer,
         ...(this.resolvedConfig.optimization?.minimizer || [])
-      ]
+      ],
+      splitChunks: Object.assign(
+        {},
+        {
+          chunks: 'all',
+          name: !this.isProductionMode
+        },
+        this.resolvedConfig.optimization?.splitChunks ?? undefined
+      )
     }
     return this
   }
@@ -250,7 +252,7 @@ export class ConfigMerger {
         test: /\.m?jsx?$/,
         exclude: /(node_modules)/,
         use: {
-          loader: 'swc-loader',
+          loader: require.resolve('swc-loader'),
           options: combineSwcLoaderOptions(this.swcLoaderOptions, {
             syntax: 'ecmascript'
           })
@@ -260,7 +262,7 @@ export class ConfigMerger {
         test: /\.tsx?$/,
         exclude: /(node_modules)/,
         use: {
-          loader: 'swc-loader',
+          loader: require.resolve('swc-loader'),
           options: combineSwcLoaderOptions(this.swcLoaderOptions, {
             syntax: 'typescript'
           })
@@ -308,6 +310,7 @@ export class ConfigMerger {
         ...combineRules(cssRules, this.resolvedConfig?.module?.rules)
       ]
     }
+
     return this
   }
   assignPlugins() {
@@ -349,8 +352,11 @@ export class ConfigMerger {
       devtool: !this.isProductionMode
         ? 'eval-cheap-module-source-map'
         : this.resolvedConfig.sourceMapOnProduction && 'source-map'
+      // resolveLoader: {
+      //   modules: ['node_modules', path.resolve(__dirname, 'node_modules')]
+      // }
     }
-    Object.assign(this.resolvedConfig, defaultOption)
+    this.resolvedConfig = Object.assign({}, this.resolvedConfig, defaultOption)
     return this
   }
   produceCssLoader(): RuleSetRule[] {
