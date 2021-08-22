@@ -27,8 +27,6 @@
     "esbuild": "^0.12.22",
     "fs-require": "^1.1.0",
     "html-webpack-plugin": "^5.3.2",
-    "htmlparser2": "^7.0.0",
-    "http-proxy-middleware": "^2.0.1",
     "memfs": "^3.2.2",
     "mime-types": "^2.1.32",
     "mini-css-extract-plugin": "^2.2.0",
@@ -36,13 +34,15 @@
     "style-loader": "^3.2.1",
     "swc-loader": "^0.1.14",
     "tapable": "^2.2.0",
-    "webpack": "^5.51.1"
+    "webpack": "^5.51.1",
+    "webpack-dev-server": "^4.0.0"
   },
   "devDependencies": {
     "@types/connect": "^3.4.35",
     "@types/mime-types": "^2.1.1",
     "@types/mini-css-extract-plugin": "^2.2.0",
-    "@types/webpack": "^5.28.0"
+    "@types/webpack": "^5.28.0",
+    "@types/webpack-dev-server": "^3.11.5"
   },
   "peerDependencies": {
     "react": "^17 || ^18",

@@ -21,10 +21,7 @@ cli
     process.env.MODE = 'development'
     const { merger, configfile } = await initConfig(options)
 
-    const { server, watching } = await serveCommand(
-      merger.resolvedConfig,
-      merger.cleanWebpackConfig()
-    )
+    const server = await serveCommand(merger)
     chokidar.watch(configfile).on('change', () => {
       console.log(
         chalk.bgGreenBright(
@@ -35,9 +32,6 @@ cli
     })
     ;['SIGINT', 'SIGTERM'].forEach((sig) =>
       process.on(sig, () => {
-        watching.close((closeErr) => {
-          console.error(chalk.red(closeErr))
-        })
         console.error(chalk.red('server stopped.'))
         server.close()
         process.exit()

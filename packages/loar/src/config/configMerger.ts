@@ -2,7 +2,6 @@ import path from 'path'
 import fs from 'fs'
 import webpack, { Configuration as WebpackConfig, RuleSetRule } from 'webpack'
 import { SyncWaterfallHook } from 'tapable'
-import type { Options as ProxyOptions } from 'http-proxy-middleware'
 import type { Options as HtmlWebpackPluginOptions } from 'html-webpack-plugin'
 import MiniCssExtractPlugin from 'mini-css-extract-plugin'
 import ModuleNotFoundErrorPlugin from '../build/plugins/ModuleNotFoundErrorPlugin'
@@ -30,12 +29,7 @@ interface CssOptions extends LoaderOptions {
 }
 
 export interface DevServer {
-  https?: boolean
-  host?: string
-  port?: number
-  proxy?: {
-    [index: string]: ProxyOptions
-  }
+  [index: string]: any
 }
 
 type FieldPlugin = { apply: (arg: HooksContext) => void }
@@ -58,10 +52,6 @@ export interface ExtendedConfig {
    */
   sourceMapOnProduction?: boolean
   /**
-   * server configuration
-   */
-  devServer?: DevServer
-  /**
    * html-webpack-plugin options
    */
   htmlOptions?: HtmlWebpackPluginOptions
@@ -83,7 +73,10 @@ export interface ExtendedConfig {
   envOptions?: EnvOptions
 }
 
-export type UserConfig = WebpackConfig & ExtendedConfig
+export type UserConfig = WebpackConfig &
+  ExtendedConfig & {
+    devServer?: DevServer
+  }
 type OneOffConfig = Pick<CommandOptions, 'staging'>
 
 interface HooksContext {
@@ -179,13 +172,12 @@ export class ConfigMerger {
     return this
   }
   assignDevServer() {
-    const defaultDevServer = {
-      host: process.env.HOST || '0.0.0.0',
-      port: Number(process.env.PORT) || 8000
-    }
     this.resolvedConfig.devServer = Object.assign(
       {},
-      defaultDevServer,
+      {
+        host: process.env.HOST || '0.0.0.0',
+        port: Number(process.env.PORT) || 8000
+      },
       this.resolvedConfig?.devServer
     )
     return this
@@ -518,7 +510,6 @@ export class ConfigMerger {
       publicPath: true,
       progress: true,
       sourceMapOnProduction: true,
-      devServer: true,
       htmlOptions: true,
       css: true,
       swcLoaderOptions: true,

@@ -5,10 +5,6 @@ import chalk from 'chalk'
 import ConfigMerger from '../config/configMerger'
 import path from 'path'
 
-interface PostBuildOption {
-  publicPath?: string
-}
-
 export function createCompiler(config: webpack.Configuration): {
   compiler: Compiler
   logger: ReturnType<Compilation['getLogger']>
