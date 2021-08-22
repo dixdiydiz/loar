@@ -1,6 +1,13 @@
 import webpack from 'webpack'
+import fsPromises from 'fs/promises'
 import type { Compiler, Compilation } from 'webpack'
 import chalk from 'chalk'
+import ConfigMerger from '../config/configMerger'
+import path from 'path'
+
+interface PostBuildOption {
+  publicPath?: string
+}
 
 export function createCompiler(config: webpack.Configuration): {
   compiler: Compiler
@@ -21,7 +28,14 @@ export function createCompiler(config: webpack.Configuration): {
   }
 }
 
-export function buildCommand(config: webpack.Configuration) {
+export async function buildCommand(merger: ConfigMerger) {
+  const config = merger.cleanWebpackConfig()
+  const distpath = config?.output?.path
+  if (distpath) {
+    await fsPromises.rmdir(distpath, { recursive: true }).catch((err) => {
+      console.error(chalk.red(err))
+    })
+  }
   const { compiler } = createCompiler(config)
   compiler.run((err, stats) => {
     if (err) {
@@ -39,6 +53,29 @@ export function buildCommand(config: webpack.Configuration) {
         )
       )
     }
-    compiler.close((err) => err && console.error('closeErr', chalk.red(err)))
+    compiler.close((err) => {
+      if (err) {
+        console.error('closeErr', chalk.red(err))
+      }
+      if (merger.publicPath) {
+        const { base: templateName } = path.parse(merger.templateFile)
+        const outpoutpath = config.output!.path!
+        ;(async function () {
+          try {
+            const dir = await fsPromises.opendir(merger.publicPath)
+            for await (const { name } of dir) {
+              if (name !== templateName) {
+                fsPromises.copyFile(
+                  path.resolve(merger.publicPath, name),
+                  path.resolve(outpoutpath, name)
+                )
+              }
+            }
+          } catch (e) {
+            console.error(chalk.red(err))
+          }
+        })()
+      }
+    })
   })
 }

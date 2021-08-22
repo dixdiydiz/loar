@@ -13,7 +13,7 @@ import {
   htmlWebpackPluginWrapper
 } from './webpackConfigHelper'
 import { CommandOptions } from './index'
-import { isObject, isString } from '../utils'
+import { isArray, isObject, isString } from '../utils'
 import { InterpolateHtmlEnvPlugin } from '../build/plugins/InterpolateHtmlEnvPlugin'
 
 type LoaderOptions = Partial<
@@ -38,7 +38,7 @@ export interface DevServer {
   }
 }
 
-type FieldPlugin = { preApply: (arg: HooksContext) => void }
+type FieldPlugin = { apply: (arg: HooksContext) => void }
 
 export interface ExtendedConfig {
   /**
@@ -46,7 +46,7 @@ export interface ExtendedConfig {
    */
   rootPath?: string
   /**
-   * public path
+   * the directory where the directly copied file is located
    */
   publicPath?: string
   /**
@@ -84,77 +84,71 @@ export interface ExtendedConfig {
 }
 
 export type UserConfig = WebpackConfig & ExtendedConfig
-type OtherConfig = Pick<CommandOptions, 'staging'>
+type OneOffConfig = Pick<CommandOptions, 'staging'>
 
 interface HooksContext {
-  hooks: {
-    readonly resolveConfig: SyncWaterfallHook<unknown>
-  }
+  resolve: SyncWaterfallHook<unknown>
 }
 
 export class ConfigMerger {
   readonly isProductionMode: boolean
   readonly hooksContext: HooksContext
-  private rootpath: string
-  publicPath: string
+  private rootPath = process.cwd()
+  publicPath = ''
   resolvedConfig: UserConfig = {}
-  otherConfig: OtherConfig = {}
+  oneOffConfig: OneOffConfig = {}
   webpackConfig: WebpackConfig = {}
   swcLoaderOptions = {}
-  parsedEnv: Record<string, any>
+  parsedEnv: Record<string, any> = {}
+  templateFile = ''
 
   constructor(readonly mode: WebpackConfig['mode']) {
     this.mode = ['development', 'production'].includes(mode as string)
       ? mode
       : 'production'
     this.isProductionMode = mode === 'production'
-    this.rootpath = process.cwd()
-    this.publicPath = path.resolve(process.cwd(), 'public')
     this.hooksContext = {
-      hooks: this.constructHooks()
+      resolve: new SyncWaterfallHook<UserConfig>(['config'])
     }
-    this.parsedEnv = {}
   }
-  setConfig(config: UserConfig, otherConfig: OtherConfig, autoAssign = false) {
+  setConfig(config: UserConfig, oneOffConfig: OneOffConfig) {
     if (!isObject(config)) {
       throw Error('configuration format error')
     }
     this.resolvedConfig = config
-    this.otherConfig = otherConfig
-    if (isString(config.rootPath)) {
-      this.rootpath = fs.realpathSync(config.rootPath)
-    }
-    if (isString(config.publicPath)) {
-      const publicpath = config.publicPath
-      this.publicPath = path.isAbsolute(publicpath)
-        ? publicpath
-        : path.resolve(this.rootpath, publicpath)
-    }
-    if (config.swcLoaderOptions) {
-      this.swcLoaderOptions = config.swcLoaderOptions
-    }
-    this.handleEnvOptions()
-    if (autoAssign) {
-      this.hybrid()
+    this.oneOffConfig = oneOffConfig
+    const {
+      rootPath = '',
+      publicPath = '',
+      swcLoaderOptions = {}
+    } = this.resolvedConfig
+    this.rootPath = rootPath ? fs.realpathSync(rootPath) : process.cwd()
+    this.publicPath = path.isAbsolute(publicPath)
+      ? publicPath
+      : path.resolve(this.rootPath, 'public')
+    this.swcLoaderOptions = swcLoaderOptions
+    this.handleEnvOptions().registerHooks().hybrid()
+    this.callResolveHook()
+    return this
+  }
+  registerHooks() {
+    const plugins = this.resolvedConfig.fieldPlugins
+    if (isArray(plugins)) {
+      const resolvePlugins = plugins.filter((ele) => 'apply' in ele)
+      resolvePlugins.forEach((plugin) => plugin.apply(this.hooksContext))
     }
     return this
   }
-  constructHooks() {
-    const hooks = {
-      resolveConfig: new SyncWaterfallHook<UserConfig>(['config'])
+  callResolveHook() {
+    const resolvedConfig = this.hooksContext.resolve.call(this.resolvedConfig)
+    if (!isObject(resolvedConfig)) {
+      throw Error('resolve hook should return the legal configuration object')
     }
-    return hooks
-  }
-  registerHooks() {
-    ;(this.resolvedConfig.fieldPlugins || [])
-      .filter((plugin) => 'preApply' in plugin)
-      .forEach((plugin) => plugin.preApply(this.hooksContext))
-  }
-  resolveConfigHook() {
-    this.hooksContext.hooks.resolveConfig.call(this.resolvedConfig)
+    this.resolvedConfig = resolvedConfig as UserConfig
+    return this
   }
   handleEnvOptions() {
-    const { staging } = this.otherConfig
+    const { staging } = this.oneOffConfig
     const { envOptions: userEnvOptions } = this.resolvedConfig
     if (staging) {
       const envOptions = Object.assign(
@@ -172,10 +166,10 @@ export class ConfigMerger {
           ? {
               dir: path.isAbsolute(userEnvOptions.dir)
                 ? userEnvOptions.dir
-                : path.resolve(this.rootpath, userEnvOptions.dir)
+                : path.resolve(this.rootPath, userEnvOptions.dir)
             }
           : {
-              dir: this.rootpath
+              dir: this.rootPath
             }
       )
       this.parsedEnv = setDotenv(staging, envOptions, {
@@ -199,7 +193,7 @@ export class ConfigMerger {
   assignOutpout() {
     const defaultOption: { [key in keyof WebpackConfig['output']]: any } = {
       path: this.isProductionMode
-        ? path.resolve(this.rootpath, 'dist')
+        ? path.resolve(this.rootPath, 'dist')
         : undefined,
       filename: '[name].[contenthash:8].js',
       chunkFilename: '[name].[contenthash:8].chunk.js'
@@ -211,6 +205,8 @@ export class ConfigMerger {
     return this
   }
   assignOptimization() {
+    // @ts-ignore
+    // @ts-ignore
     this.resolvedConfig.optimization = {
       minimize: this.isProductionMode,
       ...this.resolvedConfig.optimization,
@@ -224,13 +220,34 @@ export class ConfigMerger {
           chunks: 'all',
           name: !this.isProductionMode
         },
-        this.resolvedConfig.optimization?.splitChunks ?? undefined
-      )
+        this.resolvedConfig.optimization?.splitChunks ?? undefined,
+        {
+          cacheGroups: Object.assign(
+            {},
+            {
+              vendor: {
+                test: /[\\/]node_modules[\\/]/,
+                name: 'vendor',
+                chunks: 'all'
+              }
+            },
+            this.resolvedConfig.optimization?.splitChunks &&
+              isObject(
+                this.resolvedConfig.optimization?.splitChunks?.cacheGroups
+              )
+              ? this.resolvedConfig.optimization?.splitChunks?.cacheGroups
+              : undefined
+          )
+        }
+      ),
+      runtimeChunk: {
+        name: (entrypoint: { name: any }) => `runtime-${entrypoint.name}`
+      }
     }
     return this
   }
   assignResolve() {
-    const defaultModules = [path.resolve(this.rootpath, 'src'), '...']
+    const defaultModules = [path.resolve(this.rootPath, 'src'), '...']
     const defaultExtensions = ['.jsx', '.tsx', '...']
 
     this.resolvedConfig.resolve = {
@@ -250,7 +267,7 @@ export class ConfigMerger {
     const jsRules: RuleSetRule[] = [
       {
         test: /\.m?jsx?$/,
-        exclude: /(node_modules)/,
+        exclude: /(node_modules|lib)/,
         use: {
           loader: require.resolve('swc-loader'),
           options: combineSwcLoaderOptions(this.swcLoaderOptions, {
@@ -260,7 +277,7 @@ export class ConfigMerger {
       },
       {
         test: /\.tsx?$/,
-        exclude: /(node_modules)/,
+        exclude: /(node_modules|lib)/,
         use: {
           loader: require.resolve('swc-loader'),
           options: combineSwcLoaderOptions(this.swcLoaderOptions, {
@@ -337,7 +354,7 @@ export class ConfigMerger {
     ].filter(Boolean) as WebpackConfig['plugins']
     this.resolvedConfig.plugins = [
       htmlWebpackPluginWrapper(this),
-      new ModuleNotFoundErrorPlugin(this.rootpath),
+      new ModuleNotFoundErrorPlugin(this.rootPath),
       new EnvPlugin(),
       new InterpolateHtmlEnvPlugin(),
       ...optionalPlugins!,
@@ -351,15 +368,12 @@ export class ConfigMerger {
       bail: this.isProductionMode,
       devtool: !this.isProductionMode
         ? 'eval-cheap-module-source-map'
-        : this.resolvedConfig.sourceMapOnProduction && 'source-map'
-      // resolveLoader: {
-      //   modules: ['node_modules', path.resolve(__dirname, 'node_modules')]
-      // }
+        : (this.resolvedConfig.sourceMapOnProduction ?? true) && 'source-map'
     }
     this.resolvedConfig = Object.assign({}, this.resolvedConfig, defaultOption)
     return this
   }
-  produceCssLoader(): RuleSetRule[] {
+  produceCssLoader() {
     const { isProductionMode } = this
     const {
       extract = isProductionMode,

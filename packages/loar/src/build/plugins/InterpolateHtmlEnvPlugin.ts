@@ -66,6 +66,7 @@ export class InterpolateHtmlEnvPlugin {
             })
           }
         )
+        // TODO: delete
         // this.HtmlWebpackPlugin.getHooks(
         //   compilation
         // ).afterTemplateExecution.tapPromise('aa', async (data) => {

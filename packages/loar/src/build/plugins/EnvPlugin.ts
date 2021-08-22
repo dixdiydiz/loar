@@ -6,8 +6,17 @@ import type { Compiler } from 'webpack'
 import { isObject } from '../../utils'
 
 export interface EnvOptions {
+  /**
+   * The directory where the file is located
+   */
   dir?: string
+  /**
+   * overwrite process.env object
+   */
   ignoreProcessEnv?: boolean
+  /**
+   * property in webpack DefinePlugin override process.env
+   */
   override?: false
 }
 

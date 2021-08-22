@@ -40,12 +40,19 @@ export function htmlWebpackPluginWrapper(
     configMerger?.resolvedConfig?.htmlOptions?.templateParameters,
     configMerger
   )
+  const templateFile = (configMerger.templateFile = path.join(
+    configMerger.publicPath,
+    './index.html'
+  ))
+  if (configMerger.resolvedConfig.htmlOptions?.template) {
+    configMerger.templateFile = configMerger.resolvedConfig.htmlOptions.template
+  }
   return new HtmlWebpackPlugin(
     Object.assign(
       {},
       {
         inject: true,
-        template: path.join(configMerger.publicPath, './index.html')
+        template: templateFile
       },
       configMerger.isProductionMode
         ? {
@@ -124,7 +131,14 @@ export function combineSwcLoaderOptions(
   )
 
   transform = Object.assign({}, transform, {
-    react: Object.assign({}, { refresh: true }, transform.react)
+    react: Object.assign(
+      {},
+      {
+        runtime: 'automatic',
+        refresh: true
+      },
+      transform.react
+    )
   })
 
   return Object.assign(

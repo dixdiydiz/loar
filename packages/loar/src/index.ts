@@ -36,7 +36,7 @@ cli
     ;['SIGINT', 'SIGTERM'].forEach((sig) =>
       process.on(sig, () => {
         watching.close((closeErr) => {
-          console.error(chalk(closeErr))
+          console.error(chalk.red(closeErr))
         })
         console.error(chalk.red('server stopped.'))
         server.close()
@@ -50,8 +50,9 @@ cli
   .action(async (options: CommandOptions) => {
     process.env.MODE = 'production'
     const { merger } = await initConfig(options)
-    const config = merger.cleanWebpackConfig()
-    buildCommand(config)
+    buildCommand(merger).catch((err) => {
+      console.error(chalk.red(err))
+    })
   })
 
 cli.on('command:*', () => {

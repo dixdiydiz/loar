@@ -3,8 +3,6 @@ import { constants as fsConstants } from 'fs'
 import fsPromises from 'fs/promises'
 import path from 'path'
 import { build } from 'esbuild'
-import { vol } from 'memfs'
-import { createFsRequire } from 'fs-require'
 import ConfigMerger from './configMerger'
 import type { UserConfig } from './configMerger'
 
@@ -55,12 +53,17 @@ export async function initConfig(options: CommandOptions): Promise<{
           'import.meta.env.MODE': JSON.stringify(mode),
           'process.env.MODE': JSON.stringify(mode)
         },
-        write: false,
-        outdir: '__LOAR_OUTDIR'
+        write: false
       })
-      vol.writeFileSync('/config.js', outputFiles[0].text)
-      const original = createFsRequire(vol)('/config')
-      config = original.default || original
+      const transformFile = path.resolve(
+        process.cwd(),
+        '.__LOAR_provisional.js'
+      )
+      await fsPromises.writeFile(transformFile, outputFiles[0].text)
+      const transformed = await import(transformFile).finally(() => {
+        fsPromises.rm(transformFile)
+      })
+      config = transformed.default || transformed
       break
     }
     default:
@@ -72,8 +75,7 @@ export async function initConfig(options: CommandOptions): Promise<{
     ...config,
     progress: options.progress
   }
-  merger.setConfig(config, { staging }, true).registerHooks()
-  merger.resolveConfigHook()
+  merger.setConfig(config, { staging })
   return {
     merger,
     configfile
