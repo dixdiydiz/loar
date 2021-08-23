@@ -135,7 +135,11 @@ export function combineSwcLoaderOptions(
       {},
       {
         runtime: 'automatic',
-        refresh: true
+        refresh: {
+          refreshReg: '$RefreshReg$',
+          refreshSig: '$RefreshSig$',
+          emitFullSignatures: true
+        }
       },
       transform.react
     )

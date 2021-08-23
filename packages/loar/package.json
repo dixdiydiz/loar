@@ -17,6 +17,7 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@pmmmwh/react-refresh-webpack-plugin": "^0.5.0-rc.5",
     "@swc/core": "^1.2.80",
     "cac": "^6.7.3",
     "chalk": "^4.1.2",
@@ -31,6 +32,7 @@
     "mime-types": "^2.1.32",
     "mini-css-extract-plugin": "^2.2.0",
     "range-parser": "^1.2.1",
+    "react-refresh": "^0.10.0",
     "style-loader": "^3.2.1",
     "swc-loader": "^0.1.14",
     "tapable": "^2.2.0",

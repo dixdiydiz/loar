@@ -2,6 +2,7 @@ import path from 'path'
 import fs from 'fs'
 import webpack, { Configuration as WebpackConfig, RuleSetRule } from 'webpack'
 import { SyncWaterfallHook } from 'tapable'
+import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin'
 import type { Options as HtmlWebpackPluginOptions } from 'html-webpack-plugin'
 import MiniCssExtractPlugin from 'mini-css-extract-plugin'
 import ModuleNotFoundErrorPlugin from '../build/plugins/ModuleNotFoundErrorPlugin'
@@ -175,6 +176,7 @@ export class ConfigMerger {
     this.resolvedConfig.devServer = Object.assign(
       {},
       {
+        hot: true,
         host: process.env.HOST || '0.0.0.0',
         port: Number(process.env.PORT) || 8000
       },
@@ -327,7 +329,11 @@ export class ConfigMerger {
   assignPlugins() {
     const { extract: useMiniCssExtractPlugin = this.isProductionMode } =
       this.resolvedConfig?.css || {}
-    const optionalPlugins = [
+    this.resolvedConfig.plugins = [
+      htmlWebpackPluginWrapper(this),
+      new ModuleNotFoundErrorPlugin(this.rootPath),
+      new EnvPlugin(),
+      new InterpolateHtmlEnvPlugin(),
       this.resolvedConfig.progress &&
         new webpack.ProgressPlugin({
           activeModules: false,
@@ -344,16 +350,10 @@ export class ConfigMerger {
         }),
       this.isProductionMode &&
         useMiniCssExtractPlugin &&
-        new MiniCssExtractPlugin()
-    ].filter(Boolean) as WebpackConfig['plugins']
-    this.resolvedConfig.plugins = [
-      htmlWebpackPluginWrapper(this),
-      new ModuleNotFoundErrorPlugin(this.rootPath),
-      new EnvPlugin(),
-      new InterpolateHtmlEnvPlugin(),
-      ...optionalPlugins!,
+        new MiniCssExtractPlugin(),
+      !this.isProductionMode && new ReactRefreshWebpackPlugin(),
       ...(this.resolvedConfig.plugins || [])
-    ]
+    ].filter(Boolean) as WebpackConfig['plugins']
     return this
   }
   assignChore() {
