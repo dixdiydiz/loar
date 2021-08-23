@@ -20,8 +20,9 @@ cli
   .action(async (options: CommandOptions) => {
     process.env.MODE = 'development'
     const { merger, configfile } = await initConfig(options)
-
-    const server = await serveCommand(merger)
+    serveCommand(merger).catch((err) => {
+      console.error(chalk.red(err))
+    })
     chokidar.watch(configfile).on('change', () => {
       console.log(
         chalk.bgGreenBright(
@@ -30,13 +31,6 @@ cli
         )
       )
     })
-    ;['SIGINT', 'SIGTERM'].forEach((sig) =>
-      process.on(sig, () => {
-        console.error(chalk.red('server stopped.'))
-        server.close()
-        process.exit()
-      })
-    )
   })
 cli
   .command('build', 'build project form production')

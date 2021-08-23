@@ -209,15 +209,17 @@ export class ConfigMerger {
       splitChunks: Object.assign(
         {},
         {
-          chunks: 'all',
-          name: !this.isProductionMode
+          chunks: 'all'
+        },
+        !this.isProductionMode && {
+          name: false
         },
         this.resolvedConfig.optimization?.splitChunks ?? undefined,
         {
           cacheGroups: Object.assign(
             {},
             {
-              vendor: {
+              defaultVendors: {
                 test: /[\\/]node_modules[\\/]/,
                 name: 'vendor',
                 chunks: 'all'
@@ -388,7 +390,7 @@ export class ConfigMerger {
     ].reduce((res, key) => {
       res[key as keyof BaseCssLoaderOptions] = Object.assign(
         {},
-        key !== 'css-extract' ? { sourceMap } : undefined,
+        ['css-loader'].includes(key) && { sourceMap },
         loaderOptions[key as keyof BaseCssLoaderOptions],
         key === 'css-loader' && moduleAutoReg
           ? {
