@@ -22,16 +22,11 @@
     "cac": "^6.7.3",
     "chalk": "^4.1.2",
     "chokidar": "^3.5.2",
-    "connect": "^3.7.0",
     "css-loader": "^6.2.0",
     "dotenv": "^10.0.0",
     "esbuild": "^0.12.22",
-    "fs-require": "^1.1.0",
     "html-webpack-plugin": "^5.3.2",
-    "memfs": "^3.2.2",
-    "mime-types": "^2.1.32",
     "mini-css-extract-plugin": "^2.2.0",
-    "range-parser": "^1.2.1",
     "react-refresh": "^0.10.0",
     "style-loader": "^3.2.1",
     "swc-loader": "^0.1.14",
@@ -40,8 +35,6 @@
     "webpack-dev-server": "^4.0.0"
   },
   "devDependencies": {
-    "@types/connect": "^3.4.35",
-    "@types/mime-types": "^2.1.1",
     "@types/mini-css-extract-plugin": "^2.2.0",
     "@types/webpack": "^5.28.0",
     "@types/webpack-dev-server": "^3.11.5"
