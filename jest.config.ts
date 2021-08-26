@@ -7,7 +7,7 @@ const config: Config.InitialOptions = {
   },
   testEnvironmentOptions: {
     'jest-playwright': {
-      browsers: ['chromium', 'firefox', 'webkit'],
+      browsers: ['chromium'],
       exitOnPageError: false, // GitHub currently throws errors
       launchOptions: {
         headless: true
