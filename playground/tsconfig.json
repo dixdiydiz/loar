@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": ".",
+    "resolveJsonModule": true,
+    "composite": true
+  },
+  "include": [
+    "**/*.config.js" // for *.config.js files
+  ],
+  "files": [
+    "package.json"
+  ]
+}
