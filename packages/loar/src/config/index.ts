@@ -22,7 +22,7 @@ export async function initConfig(options: CommandOptions): Promise<{
   let config: UserConfig
   const merger = new ConfigMerger(mode)
   let { config: configfile = '' } = options
-  const supportExt = ['.json', '.js', '.ts'] as const
+  const supportExt = ['.js', '.ts'] as const
 
   if (!configfile) {
     for (const ext of supportExt) {
@@ -39,7 +39,6 @@ export async function initConfig(options: CommandOptions): Promise<{
   }
   const ext = path.parse(configfile).ext as typeof supportExt[number]
   switch (ext) {
-    case '.json':
     case '.js':
       config = await import(configfile)
       break

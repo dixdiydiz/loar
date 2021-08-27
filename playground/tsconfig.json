@@ -1,14 +1,23 @@
 {
+  "extends": "../tsconfig.base.json",
+  "include": ["."],
+  "exclude": ["**/dist/**"],
   "compilerOptions": {
-    "rootDir": ".",
-    "outDir": ".",
+    "target": "esnext",
+    "outDir": "dist",
+    "allowJs": true,
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "baseUrl": ".",
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "esnext",
     "resolveJsonModule": true,
-    "composite": true
+    "isolatedModules": true,
+    "noEmit": true,
+    "noFallthroughCasesInSwitch": true,
+    "jsx": "preserve"
   },
-  "include": [
-    "**/*.config.js" // for *.config.js files
-  ],
-  "files": [
-    "package.json"
-  ]
 }

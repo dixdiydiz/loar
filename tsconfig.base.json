@@ -2,6 +2,7 @@
   "extends": "@tsconfig/node14/tsconfig.json",
   "compilerOptions": {
     "sourceMap": true,
-    "resolveJsonModule": true
-  }
+    "resolveJsonModule": true,
+    "types": ["jest-playwright-preset", "expect-playwright", "jest"]
+  },
 }
