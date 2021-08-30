@@ -17,7 +17,7 @@ const config: Config.InitialOptions = {
   globalSetup: './jestScripts/jestGlobalSetup.js',
   globalTeardown: './jestScripts/jestGlobalTeardown.js',
   setupFilesAfterEnv: ['./jestScripts/jestPerTestSetup.ts'],
-  testMatch: process.env.VITE_TEST_BUILD
+  testMatch: process.env.TEST_BUILD
     ? ['**/playground/**/*.spec.[jt]s?(x)']
     : ['**/*.spec.[jt]s?(x)'],
   testTimeout: process.env.CI ? 30000 : 10000,

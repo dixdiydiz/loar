@@ -11,11 +11,13 @@
   "homepage": "https://github.com/dixdiydiz/loar#readme",
   "workspaces": [
     "./packages/*",
+    "./playground",
     "./playground/*"
   ],
   "scripts": {
     "prepare": "husky install",
     "test-serve": "jest",
+    "test-build": "cross-env TEST_BUILD=1 jest",
     "fix": "eslint --fix",
     "check-updates": "npx npm-check-updates -u"
   },

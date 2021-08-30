@@ -80,8 +80,8 @@ export type UserConfig = WebpackConfig &
   }
 type OneOffConfig = Pick<CommandOptions, 'staging'>
 
-interface HooksContext {
-  resolve: SyncWaterfallHook<unknown>
+export interface HooksContext {
+  resolve: SyncWaterfallHook<UserConfig>
 }
 
 export class ConfigMerger {
