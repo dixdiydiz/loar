@@ -17,7 +17,7 @@
   "scripts": {
     "prepare": "husky install",
     "test-serve": "jest",
-    "test-build": "cross-env TEST_BUILD=1 jest",
+    "test-build": "cross-env TEST_BUILD=1 jest --detectOpenHandles",
     "fix": "eslint --fix",
     "check-updates": "npx npm-check-updates -u"
   },
@@ -52,5 +52,8 @@
   "lint-staged": {
     "*.js": "eslint --cache --fix",
     "*.ts": "eslint --cache --fix"
+  },
+  "dependencies": {
+    "-": "^0.0.1"
   }
 }

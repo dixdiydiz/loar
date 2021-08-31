@@ -45,6 +45,7 @@ export async function initConfig(options: CommandOptions): Promise<{
     case '.ts': {
       const { outputFiles } = await build({
         entryPoints: [configfile],
+        bundle: true,
         platform: 'node',
         format: 'cjs',
         target: ['node14'],

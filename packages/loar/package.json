@@ -4,6 +4,7 @@
   "description": "react cli",
   "scripts": {
     "start": "tsc -w -p src",
+    "build": "tsc -p src",
     "test": "echo \"Error: no test specified\" && exit 1",
     "check-updates": "npx npm-check-updates -u"
   },
@@ -13,7 +14,7 @@
   "main": "./dist/index.js",
   "exports": {
     ".": "./dist/index.js",
-    "./HtmlWebpackPlugin": "./dist/exposedPackages.js"
+    "./HtmlWebpackPlugin": "./dist/exposedHtmlWebpackPlugin.js"
   },
   "license": "MIT",
   "dependencies": {
