@@ -3,11 +3,6 @@ const http = require('http')
 const fs = require('fs')
 const path = require('path')
 const { spawnSync, spawn } = require('child_process')
-// const {
-//   setup: setupDevServer,
-//   getServers,
-//   teardown: teardownDevServer
-// } = require('jest-process-manager')
 const { cutoutBasePath } = require('../playground/testHelper')
 
 const isBuildTest = !!process.env.TEST_BUILD
