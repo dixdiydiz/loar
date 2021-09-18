@@ -8,7 +8,7 @@ import type { UserConfig } from './configMerger'
 
 export interface CommandOptions {
   config?: string
-  staging?: string
+  phase?: string
   progress?: boolean
 }
 
@@ -17,7 +17,7 @@ export async function initConfig(options: CommandOptions): Promise<{
   configfile: string
 }> {
   const mode: WebpackConfig['mode'] = process.env.MODE as WebpackConfig['mode']
-  const { staging = mode } = options
+  const { phase = mode } = options
 
   let config: UserConfig
   const merger = new ConfigMerger(mode)
@@ -53,7 +53,8 @@ export async function initConfig(options: CommandOptions): Promise<{
           'import.meta.env.MODE': JSON.stringify(mode),
           'process.env.MODE': JSON.stringify(mode)
         },
-        write: false
+        write: false,
+        logLevel: 'error'
       })
       const transformFile = path.resolve(
         process.cwd(),
@@ -75,7 +76,7 @@ export async function initConfig(options: CommandOptions): Promise<{
     ...config,
     progress: options.progress
   }
-  merger.setConfig(config, { staging })
+  merger.setConfig(config, { phase })
   return {
     merger,
     configfile

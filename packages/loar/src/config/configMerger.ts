@@ -6,7 +6,11 @@ import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin'
 import type { Options as HtmlWebpackPluginOptions } from 'html-webpack-plugin'
 import MiniCssExtractPlugin from 'mini-css-extract-plugin'
 import ModuleNotFoundErrorPlugin from '../build/plugins/ModuleNotFoundErrorPlugin'
-import { setDotenv, EnvOptions, EnvPlugin } from '../build/plugins/EnvPlugin'
+import {
+  setDotenv,
+  EnvOptions,
+  ImportMetaEnv
+} from '../build/plugins/ImportMetaEnv'
 import {
   combineRules,
   combineSwcLoaderOptions,
@@ -78,7 +82,7 @@ export type UserConfig = WebpackConfig &
   ExtendedConfig & {
     devServer?: DevServer
   }
-type OneOffConfig = Pick<CommandOptions, 'staging'>
+type OneOffConfig = Pick<CommandOptions, 'phase'>
 
 export interface HooksContext {
   resolve: SyncWaterfallHook<UserConfig>
@@ -142,20 +146,14 @@ export class ConfigMerger {
     return this
   }
   handleEnvOptions() {
-    const { staging } = this.oneOffConfig
+    const { phase } = this.oneOffConfig
     const { envOptions: userEnvOptions } = this.resolvedConfig
-    if (staging) {
+    if (phase) {
       const envOptions = Object.assign(
         {},
-        {
-          ignoreProcessEnv: true,
-          override: true
+        userEnvOptions && {
+          ...userEnvOptions
         },
-        userEnvOptions
-          ? {
-              ...userEnvOptions
-            }
-          : undefined,
         userEnvOptions?.dir
           ? {
               dir: path.isAbsolute(userEnvOptions.dir)
@@ -166,7 +164,7 @@ export class ConfigMerger {
               dir: this.rootPath
             }
       )
-      this.parsedEnv = setDotenv(staging, envOptions, {
+      this.parsedEnv = setDotenv(phase, envOptions, {
         PUBLIC_DIR: this.publicPath
       })
     }
@@ -332,7 +330,7 @@ export class ConfigMerger {
     this.resolvedConfig.plugins = [
       htmlWebpackPluginWrapper(this),
       new ModuleNotFoundErrorPlugin(this.rootPath),
-      new EnvPlugin(),
+      new ImportMetaEnv(),
       new InterpolateHtmlEnvPlugin(),
       this.resolvedConfig.progress &&
         new webpack.ProgressPlugin({

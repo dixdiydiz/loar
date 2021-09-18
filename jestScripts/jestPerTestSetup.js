@@ -5,7 +5,7 @@ const path = require('path')
 const { spawnSync, spawn } = require('child_process')
 const { cutoutBasePath } = require('../playground/testHelper')
 
-const isBuildTest = !!process.env.TEST_BUILD
+const isBuildTest = !!process.env.TEST_PRAYGROUND
 
 let server
 let child

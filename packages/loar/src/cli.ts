@@ -11,7 +11,7 @@ const cli = cac('loar')
 cli
   .option('--config', ' specify the configuration file name')
   .option(
-    '--staging',
+    '--phase <phase>',
     'different release stages, like development, test, production and so on.'
   )
 

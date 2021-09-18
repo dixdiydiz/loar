@@ -23,7 +23,7 @@ export class InterpolateHtmlEnvPlugin {
         ).beforeAssetTagGeneration.tapPromise(
           'InterpolateHtmlEnvPlugin',
           async (data) => {
-            const { parsedEnv } = await import('./EnvPlugin')
+            const { parsedEnv } = await import('./ImportMetaEnv')
             this.parsedEnv = { ...parsedEnv, PUBLIC_DIR: '' }
             return new Promise((resolve) => {
               if (data?.plugin?.options?.templateParameters) {
@@ -66,13 +66,6 @@ export class InterpolateHtmlEnvPlugin {
             })
           }
         )
-        // TODO: delete
-        // this.HtmlWebpackPlugin.getHooks(
-        //   compilation
-        // ).afterTemplateExecution.tapPromise('aa', async (data) => {
-        //   console.log(data)
-        //   return data
-        // })
       }
     )
   }

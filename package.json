@@ -17,9 +17,9 @@
   "scripts": {
     "prepare": "husky install",
     "test-serve": "jest",
-    "test-build": "cross-env TEST_BUILD=1 jest --detectOpenHandles",
+    "test-build": "cross-env TEST_PRAYGROUND=1 jest --detectOpenHandles",
     "fix": "eslint --fix",
-    "check-updates": "npx npm-check-updates -u"
+    "check-updates": "npm exec --workspaces -- npx npm-check-updates  --target minor -u"
   },
   "devDependencies": {
     "@commitlint/cli": "^13.1.0",
