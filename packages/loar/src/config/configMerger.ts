@@ -369,7 +369,7 @@ export class ConfigMerger {
     const { isProductionMode } = this
     const {
       extract = isProductionMode,
-      sourceMap = false,
+      sourceMap = !isProductionMode,
       moduleExtension = true,
       ...loaderOptions
     } = this.resolvedConfig?.css || {}
@@ -419,7 +419,9 @@ export class ConfigMerger {
             loader: 'sass-loader',
             options: Object.assign(
               {},
-              { sourceMap },
+              {
+                sourceMap
+              },
               loaderOptions['sass-loader']
             )
           }

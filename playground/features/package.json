@@ -6,5 +6,9 @@
     "serve": "loar serve --phase extra",
     "build": "loar build --phase extra"
   },
-  "dependencies": {}
+  "devDependencies": {
+    "resolve-url-loader": "^4.0.0",
+    "sass": "^1.42.1",
+    "sass-loader": "^12.1.0"
+  }
 }
