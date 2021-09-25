@@ -394,7 +394,9 @@ export class ConfigMerger {
           ? {
               modules: {
                 auto: moduleAutoReg,
-                localIdentName: '[path][name]__[local]--[hash:base64:5]'
+                localIdentName: isProductionMode
+                  ? '[local]--[hash:base64:5]'
+                  : '[path][name]__[local]--[hash:base64:5]'
               }
             }
           : undefined
