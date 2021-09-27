@@ -9,7 +9,9 @@ const StyleText = () => {
       <p className="fontFromSass">this text is red</p>
       <p className="fontFromLess">this text is blue</p>
       <p className="fontFromStyl">this text is green</p>
-      <p className={moduleStyle.styleFromModule}>this text from module</p>
+      <p id="moduleStyle" className={moduleStyle.styleFromModule}>
+        this text from module
+      </p>
     </div>
   )
 }

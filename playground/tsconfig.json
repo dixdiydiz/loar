@@ -18,6 +18,9 @@
     "isolatedModules": true,
     "noEmit": true,
     "noFallthroughCasesInSwitch": true,
-    "jsx": "preserve"
+    "jsx": "preserve",
+    "lib": [
+      "dom"
+    ]
   },
 }

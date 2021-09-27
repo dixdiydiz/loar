@@ -11,8 +11,8 @@
   "homepage": "https://github.com/dixdiydiz/loar#readme",
   "workspaces": [
     "./packages/*",
-    "./playground",
-    "./playground/*"
+    "./playground/*",
+    "./playground"
   ],
   "scripts": {
     "prepare": "husky install",
@@ -38,7 +38,7 @@
     "jest": "^27.0.6",
     "jest-playwright-preset": "^1.7.0",
     "lint-staged": "^11.1.2",
-    "playwright": "^1.14.1",
+    "playwright": "^1.15.0",
     "prettier": "^2.3.2",
     "sirv": "^1.0.17",
     "ts-jest": "^27.0.5",
