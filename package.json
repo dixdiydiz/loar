@@ -12,7 +12,8 @@
   "workspaces": [
     "./packages/*",
     "./playground/*",
-    "./playground"
+    "./playground",
+    "react-conventional-route"
   ],
   "scripts": {
     "prepare": "husky install",

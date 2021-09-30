@@ -3,6 +3,7 @@ import { constants as fsConstants } from 'fs'
 import fsPromises from 'fs/promises'
 import path from 'path'
 import { build } from 'esbuild'
+import { excludeInternalModules } from './esbuildPlugins'
 import ConfigMerger from './configMerger'
 import type { UserConfig } from './configMerger'
 
@@ -54,7 +55,8 @@ export async function initConfig(options: CommandOptions): Promise<{
           'process.env.MODE': JSON.stringify(mode)
         },
         write: false,
-        logLevel: 'error'
+        logLevel: 'error',
+        plugins: [excludeInternalModules]
       })
       const transformFile = path.resolve(
         process.cwd(),
