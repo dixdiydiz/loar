@@ -6,13 +6,14 @@ Desc: root directory of the matching route.
 Type: string | string[]
 - routeMatch`optional`   
 Desc: which files are considered routes.  
-Type: Glob  
+Type: Glob | Goob[] 
 Example: `["**/*.route.{js,jsx,ts,tsx}"]`  
 Default: `["**/*.{js,jsx,ts,tsx}"]`
 - exclude`optional`  
 Desc: which files are not be considered routes.  
-Type: Glob  
-Example: `["**/__tests__/**"]`  
+Type: Glob | Goob[]   
+Example: `["**/__tests__/**"]`
+- Default: `["**/__tests__/**"]`
 
 ### Features which does not support modified
 - `_index` prefix file name in the directory.  
@@ -63,12 +64,12 @@ like: `<rootDir>/pages/_index.route.tsx` -->
   └── pages
     ├── index.route.tsx
     ├── users
-      └──_index.route.tsx
-      └──[id].route.tsx
+    │  ├── _index.route.tsx
+    │  └── [id].route.tsx
     ├── about
-      └──index.route.tsx
-      └──[id].route.tsx
-    └── me.route.tsx
+    │  ├── index.route.tsx
+    │  └── [id].route.tsx
+    ├── me.route.tsx
     └── invalid.tsx
 ``` 
 result:
