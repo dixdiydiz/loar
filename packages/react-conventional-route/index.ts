@@ -24,7 +24,7 @@ export default function (root: string, routeMatch?: string[]): Route[] {
       : ['**/*.{js,jsx,ts,tsx}']),
     '!**/__tests__/**'
   ]
-  const paths = fg.sync(routeMatch!, {
+  const paths = fg.sync(routeMatch, {
     cwd: root,
     onlyFiles: true
   })
