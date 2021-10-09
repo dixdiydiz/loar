@@ -1,4 +1,5 @@
 ## React Conventional Route
+**Base on React Router, require >=v6.**
 ***
 ### argements
 - root`required`  

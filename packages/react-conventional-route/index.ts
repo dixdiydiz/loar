@@ -15,27 +15,19 @@ function cutoutPath(way: string): string {
   return way.split('.')[0]
 }
 
-export default function (
-  root: string,
-  routeMatch?: string[],
-  exclude?: string[]
-): Route[] {
-  routeMatch = Array.isArray(routeMatch)
-    ? routeMatch
-    : typeof routeMatch === 'string'
-    ? [routeMatch]
-    : ['**/*.{js,jsx,ts,tsx}']
-  exclude = Array.isArray(exclude)
-    ? exclude
-    : typeof exclude === 'string'
-    ? [exclude]
-    : ['**/__tests__/**']
-  const paths = fg.sync([...routeMatch!, ...exclude!.map((str) => `!${str}`)], {
+export default function (root: string, routeMatch?: string[]): Route[] {
+  routeMatch = [
+    ...(Array.isArray(routeMatch)
+      ? routeMatch
+      : typeof routeMatch === 'string'
+      ? [routeMatch]
+      : ['**/*.{js,jsx,ts,tsx}']),
+    '!**/__tests__/**'
+  ]
+  const paths = fg.sync(routeMatch!, {
     cwd: root,
     onlyFiles: true
   })
-
-  console.log(paths)
   return factory(root, '', paths)
 
   function factory(cwd: string, dir: string, files: string[]): Route[] {
@@ -62,15 +54,14 @@ export default function (
       }
       if (/^404\./.test(file)) {
         notFoundElement = {
-          path: '*',
+          path: !dir ? '*' : `${cutoutPath(dir)}/*`,
           element: path.join(cwd, file)
         }
         continue
       }
       if (/\//.test(file)) {
-        let deepDir = file.split('/')[0]
+        const deepDir = file.split('/')[0]
         const deepFile = file.substring(deepDir.length + 1)
-        deepDir = dir ? `${dir}/${deepDir}` : deepDir
         if (deepRoutes[deepDir]) {
           deepRoutes[deepDir].push(deepFile)
         } else {
@@ -87,13 +78,23 @@ export default function (
       routes.push(...factory(path.join(cwd, dir), dir, files as string[]))
     }
     if (wrap) {
-      return [{ ...indexElement, children: routes }, notFoundElement].filter(
-        Boolean
-      ) as Route[]
+      return [
+        {
+          ...indexElement,
+          children: notFoundElement
+            ? [...routes, { ...notFoundElement, path: '*' }]
+            : [...routes]
+        }
+      ] as Route[]
     } else {
-      return [indexElement, ...routes, notFoundElement].filter(
-        Boolean
-      ) as Route[]
+      return [
+        indexElement,
+        ...routes.map((r) => ({
+          ...r,
+          path: dir ? `${cutoutPath(dir)}/${r.path}` : r.path
+        })),
+        notFoundElement
+      ].filter(Boolean) as Route[]
     }
   }
 }
