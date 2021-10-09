@@ -11,9 +11,9 @@
   "scripts": {
     "start": "tsc -w",
     "build": "tsc -p",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "dependencies": {
-    "globby": "^11.0.4"
+    "fast-glob": "^3.2.7"
   }
 }

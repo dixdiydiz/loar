@@ -70,6 +70,7 @@ like: `<rootDir>/pages/_index.route.tsx` -->
     │  ├── index.route.tsx
     │  └── [id].route.tsx
     ├── me.route.tsx
+    ├── 404.route.tsx
     └── invalid.tsx
 ``` 
 result:
@@ -77,7 +78,7 @@ result:
 [
   { path: '/', element: '<rootDir>/pages/index.route.tsx' },
   {
-    path: 'users',
+    path: 'users/*',
     element: '<rootDir>/pages/users/index.route.tsx',
     children: [
       { path: ':id', element: '<rootDir>/pages/users/[id].route.tsx' },
@@ -86,5 +87,6 @@ result:
   { path: 'about', element: '<rootDir>/pages/about/index.route.tsx' },
   { path: 'about/:id', element: '<rootDir>/pages/about/[id].route.tsx' },
   { path: 'me', element: '<rootDir>/pages/me.route.tsx' },
+  { path: '*', element: '<rootDir>/pages/404.route.tsx' },
 ]
 ```

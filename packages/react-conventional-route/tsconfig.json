@@ -1,5 +1,5 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "@tsconfig/node14/tsconfig.json",
   "compilerOptions": {
     "rootDir": ".",
     "outDir": "./dist",
@@ -7,6 +7,8 @@
     "removeComments": true,
     "preserveConstEnums": true,
     "incremental": true,
-    "declaration": true
-  }
+    "declaration": true,
+    "moduleResolution": "Node",
+  },
+  "files": ["index.ts"]
 }
