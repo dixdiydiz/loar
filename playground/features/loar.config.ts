@@ -7,6 +7,11 @@ export default {
     path: path.resolve(__dirname, 'dist'),
     publicPath: ''
   },
+  resolve: {
+    alias: {
+      '@pages': path.join(__dirname, 'src/pages')
+    }
+  },
   plugins: [
     new HtmlWebpackPlugin({
       filename: 'test.html',
